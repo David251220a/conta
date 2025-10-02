@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\SifenController;
 use Illuminate\Support\Facades\Auth;
@@ -34,5 +35,8 @@ Route::group([
     Route::post('/factura/crear', [FacturaController::class, 'create'])->name('factura.store');
     Route::get('/factura/{factura}/ver-factura', [FacturaController::class, 'show'])->name('factura.show');
 
-    Route::get('/sifen/{factura}/crear', [SifenController::class, 'enviar_sifen'])->name('sifen.enviar_sifen');
+    Route::get('/sifen/{factura}/ver', [SifenController::class, 'enviar_sifen'])->name('sifen.enviar_sifen');
+    Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');
+
+    Route::get('/consulta/facturas-en-espera-o-rechazado', [ConsultaController::class, 'facturas'])->name('consulta.factura_pendiente');
 });

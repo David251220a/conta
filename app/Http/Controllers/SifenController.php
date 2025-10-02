@@ -56,6 +56,7 @@ class SifenController extends Controller
                 'moneda' => 'PYG',
                 'correo_enviado' => 'N',
                 'enviado_sifen' => 'N',
+                'sifen_respuesta_consulta_xml' => '',
             ]);
             $secuencia->secuencia = $secuencia->secuencia + 1;
             $secuencia->update();
@@ -67,7 +68,6 @@ class SifenController extends Controller
                 $json = $builder->jsonContado();
             }
             $documento =  $xml->generate($json, $factura->timbrado_id);
-
             $sifen->update([
                 'cdc' => $documento['cdc'],
                 'documento_xml' => $documento['archivo_xml'],
@@ -82,16 +82,41 @@ class SifenController extends Controller
                 'evento' => null,
                 'sifen_cod' => 0,
             ]);
+
         }
 
-        $ruta_zip = $this->sifen->lotear($sifen);
-        $sifen->update([
-            'documento_zip' => $ruta_zip,
-        ]);
-
-
-        return $this->sifen->enviar_zip($sifen);
+        return $this->sifen->enviar_directo($sifen);
 
         return $factura;
     }
+
+    public function reenviar_sifen(Sifen $sifen)
+    {
+        $factura = Factura::find($sifen->factura_id);
+        $builder = new FacturaJsonBuilder($factura);
+        $xml = new FacturaXMLBuilder();
+        $json = [];
+        if($factura->tipo_documento_id == 1){
+            $json = $builder->jsonContado();
+        }
+        $documento =  $xml->generate($json, $factura->timbrado_id);
+        $sifen->update([
+            'cdc' => $documento['cdc'],
+            'documento_xml' => $documento['archivo_xml'],
+            'documento_pdf' => 'facturas/' . $documento['cdc'] .'.pdf',
+            'documento_zip' => null,
+            'zipeado' => 'N',
+            'sifen_num_transaccion' => 0,
+            'sifen_estado' => 'PENDIENTE',
+            'sifen_mensaje' => '',
+            'fecha_firma' => $documento['fecha_firma'],
+            'link_qr' => $documento['link_qr'],
+            'evento' => null,
+            'sifen_cod' => 0,
+        ]);
+        return $this->sifen->enviar_directo($sifen);
+
+        return redirect()->route('consulta.factura_pendiente')->with('message', 'Reenviado con exito.');
+    }
+
 }

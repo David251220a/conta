@@ -497,6 +497,7 @@ class SifenServices
             $absolutePathFirma = Storage::disk('public')->path($sifen->documento_xml);
             $xml = file_get_contents($absolutePathFirma);
             $xml = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xml);
+            
             if (!Storage::disk('public')->exists($sifen->documento_xml)) {
                 throw new \Exception('Archivo XML firmado no encontrado.');
             }
@@ -533,7 +534,7 @@ class SifenServices
 
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
-           // dd($url);
+           //dd($url);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             //curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
@@ -642,6 +643,120 @@ class SifenServices
         }
     }
 
+    public function enviar_directo(Sifen $sifen)
+    {
+        try {
+            // 1) Cargar DE firmado
+            if (!Storage::disk('public')->exists($sifen->documento_xml)) {
+                throw new \Exception('Archivo XML firmado no encontrado.');
+            }
+            $absolutePathFirma = Storage::disk('public')->path($sifen->documento_xml);
+            $xmlFirmado = file_get_contents($absolutePathFirma); // <rDE ...>...</rDE> firmado (no tocar)
+            
+            // 2) SOAP siRecepDE (un solo DE)
+            $codSecuencia1 = $sifen->secuencia; // tu correlativo numérico (1–15 dígitos)}
+            $xmlFirmado = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xmlFirmado);
+            $xmlFirmado = trim($xmlFirmado);
+            
+            $xmlenvio = '
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+            <soap:Header/>
+            <soap:Body>
+                <rEnviDe xmlns="http://ekuatia.set.gov.py/sifen/xsd">
+                <dId>'.$codSecuencia1.'</dId>
+                <xDE>'.$xmlFirmado.'</xDE>
+                </rEnviDe>
+            </soap:Body>
+            </soap:Envelope>';
+
+            // 3) cURL
+            //$url       = config('facturacion.link_api')[($this->entidad->ambiente == 1) ? 'produccion' : 'test']; // siRecepDE
+            $url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
+            $ruta_cert = storage_path('app/keys/firma.p12');
+            $password = 'LqO#9j0E';
+            dd($xmlenvio);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlenvio);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/soap+xml']);
+            curl_setopt($ch, CURLOPT_SSLCERT, $ruta_cert);
+            curl_setopt($ch, CURLOPT_SSLCERTTYPE, 'P12');
+            curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $password);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $response = curl_exec($ch);
+            if ($response === false) {
+                throw new \Exception('Error de cURL: ' . curl_error($ch));
+            }
+            curl_close($ch);
+
+            // 4) Guardar debug
+            Storage::put("debug/envio_directo_{$codSecuencia1}.xml", $xmlenvio);
+            Storage::put("debug/respuesta_directo_{$codSecuencia1}.xml", $response);
+
+            // 5) Parseo robusto de la respuesta siRecepDE
+            $xmlResponse = @simplexml_load_string($response);
+            if ($xmlResponse === false) {
+                // Guarda igualmente la respuesta cruda y marca rechazado
+                $sifen->update([
+                    'sifen_envio_fecha'        => now(),
+                    'sifen_envio_codrespuesta' => null,
+                    'sifen_envio_msjrespuesta' => 'Respuesta no válida (no XML).',
+                    'sifen_envio_xml'          => $response,
+                    'enviado_sifen'            => 'N',
+                    'sifen_estado'             => 'RECHAZADO',
+                ]);
+                return [false, 'Respuesta no válida (no XML).'];
+            }
+
+            $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
+            $get = function ($path) use ($xmlResponse) {
+                $n = $xmlResponse->xpath($path);
+                return isset($n[0]) ? (string)$n[0] : '';
+            };
+
+            // Campos típicos de rRetEnviDe/rProtDe
+            $estado    = $get('//ns:dEstRes');                // Aprobado / Aprobado con observación / Rechazado
+            $cod       = $get('//ns:dCodRes');                // p.ej. 0160, etc.
+            $mensaje   = $get('//ns:dMsgRes');                // texto mensaje
+            $fecProc   = $get('//ns:dFecProc');               // fecha proceso
+            $cdcResp   = $get('//ns:rProtDe/ns:id');          // CDC devuelto (si viene)
+            $fecha_fmt = !empty($fecProc) ? \Carbon\Carbon::parse($fecProc)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s');
+
+            $enviado = in_array($estado, ['Aprobado', 'Aprobado con observación']) ? 'Y' : 'N';
+
+            // 6) Actualización del modelo
+            $sifen->update([
+                'sifen_envio_fecha'        => $fecha_fmt,
+                'sifen_envio_codrespuesta' => $cod,
+                'sifen_envio_msjrespuesta' => $mensaje,
+                'sifen_envio_xml'          => $response,
+                'enviado_sifen'            => $enviado,
+                'sifen_estado'             => strtoupper($estado ?: 'RECHAZADO'),
+                'cdc'                      => $cdcResp ?: $sifen->cdc, // mantener CDC si no viene
+            ]);
+
+            // 7) Retorno amigable
+            $ok = ($enviado === 'Y');
+            $texto = "Estado: ".($estado ?: 'RECHAZADO')." | Código: ".($cod ?: '—')." | Mensaje: ".($mensaje ?: '—');
+            
+            return [
+                $ok,
+                $texto,
+                'estado'  => $estado ?: 'RECHAZADO',
+                'codigo'  => $cod,
+                'mensaje' => $mensaje,
+                'cdc'     => $cdcResp ?: $sifen->cdc,
+                'fecha'   => $fecha_fmt,
+            ];
+
+        } catch (\Exception $e) {
+            // Error general
+            return [false, 'Excepción: ' . $e->getMessage()];
+        }
+    }
+
+
     public function consultar(Sifen $sifen)
     {
         $lotenum = $sifen->sifen_num_transaccion;
@@ -728,7 +843,7 @@ class SifenServices
                 }
 
                 $sifen->update([
-                    //'sifen_num_transaccion' => $dProtAut,
+                    'sifen_num_transaccion' => $dProtAut,
                     'sifen_cod' => $dCodRes,
                     'sifen_estado' => $dEstRes,
                     'sifen_mensaje' => $dMsgRes
@@ -762,7 +877,8 @@ class SifenServices
             </env:Body>
             </env:Envelope>
             XML;
-            dd($xml);
+            //dd($xml);
+            //dd($url);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);

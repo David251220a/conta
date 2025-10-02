@@ -38,6 +38,7 @@ return new class extends Migration
             $table->integer('sifen_envio_codrespuesta')->nullable();
             $table->text('sifen_envio_msjrespuesta')->nullable();
             $table->text('sifen_envio_xml')->nullable();
+            $table->text('sifen_respuesta_consulta_xml')->nullable();
             $table->string('enviado_sifen', 100)->nullable();
             $table->timestamps();
         });

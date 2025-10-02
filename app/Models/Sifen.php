@@ -10,4 +10,9 @@ class Sifen extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function fact()
+    {
+        return $this->belongsTo(Factura::class, 'factura_id');
+    }
 }
