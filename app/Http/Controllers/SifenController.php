@@ -99,6 +99,7 @@ class SifenController extends Controller
         if($factura->tipo_documento_id == 1){
             $json = $builder->jsonContado();
         }
+        
         $documento =  $xml->generate($json, $factura->timbrado_id);
         $sifen->update([
             'cdc' => $documento['cdc'],
@@ -114,6 +115,7 @@ class SifenController extends Controller
             'evento' => null,
             'sifen_cod' => 0,
         ]);
+        
         return $this->sifen->enviar_directo($sifen);
 
         return redirect()->route('consulta.factura_pendiente')->with('message', 'Reenviado con exito.');

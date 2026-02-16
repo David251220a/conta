@@ -8,6 +8,7 @@ use App\Helpers\SifenHelper;
 use App\Models\Establecimiento;
 use App\Models\Factura;
 use App\Models\Sifen;
+use Carbon\Carbon;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\Utils\XPath;
@@ -46,7 +47,6 @@ class FacturaXMLBuilder
             $ambiente   = $this->entidad->ambiente;
             $linkQrBase = config('facturacion.link_qr')[($ambiente == 1) ? 'produccion' : 'test'];
             $versionQr = config('facturacion.qr_version');
-
             if($this->entidad->ambiente == 1){
                 $dNomEmi = $this->entidad->razon_social;
                 $_codeCSC = $timbrado->codigo_set_id;
@@ -60,6 +60,7 @@ class FacturaXMLBuilder
                 $_codeCSC = "001";
                 $_dCSC    = "ABCD0000000000000000000000000000";
             }
+            
             $iTImp = '1';
             $cActEco = "";
             foreach ($this->entidad->actividades as $item) {
@@ -68,7 +69,7 @@ class FacturaXMLBuilder
                 $cActEco .= "<dDesActEco>" . htmlspecialchars($item->descripcion, ENT_XML1, 'UTF-8') . "</dDesActEco>\n";
                 $cActEco .= "</gActEco>\n";
             }
-
+            
             $gOblAfe = "";
             foreach ($this->entidad->obligaciones as $item) {
                 $gOblAfe .= "<gOblAfe>\n";
@@ -397,7 +398,8 @@ class FacturaXMLBuilder
 
             $cdc = $cdcTemp . $dvCDC;
 
-            $fechaHoraFirma = date('Y-m-d\TH:i:s');
+            //$fechaHoraFirma = date('Y-m-d\TH:i:s');
+            $fechaHoraFirma = $this->sifenFechaHoraFirma(); 
             $genXML = '<?xml version="1.0" encoding="UTF-8"?>
             <rDE xmlns="http://ekuatia.set.gov.py/sifen/xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://ekuatia.set.gov.py/sifen/xsd siRecepDE_v150.xsd">
                 <dVerFor>150</dVerFor>
@@ -1070,6 +1072,16 @@ class FacturaXMLBuilder
 
         return null;
     }
+
+
+    function sifenFechaHoraFirma(int $margenSegundos = 10): string
+    {
+        // Hora Paraguay
+        $dt = Carbon::now('America/Asuncion')->subSeconds($margenSegundos);
+
+        // Formato SIFEN: YYYY-MM-DDTHH:mm:ss (sin offset)
+        return $dt->format('Y-m-d\TH:i:s');
+}
 
 }
 

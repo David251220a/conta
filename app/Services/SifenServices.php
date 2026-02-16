@@ -710,11 +710,12 @@ class SifenServices
             }
 
             $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
+            
             $get = function ($path) use ($xmlResponse) {
                 $n = $xmlResponse->xpath($path);
                 return isset($n[0]) ? (string)$n[0] : '';
             };
-
+            
             // Campos típicos de rRetEnviDe/rProtDe
             $estado    = $get('//ns:dEstRes');                // Aprobado / Aprobado con observación / Rechazado
             $cod       = $get('//ns:dCodRes');                // p.ej. 0160, etc.
