@@ -34,6 +34,7 @@ Route::group([
     Route::get('/factura/crear', [FacturaController::class, 'create'])->name('factura.create');
     Route::post('/factura/crear', [FacturaController::class, 'create'])->name('factura.store');
     Route::get('/factura/{factura}/ver-factura', [FacturaController::class, 'show'])->name('factura.show');
+    Route::get('/factura/{factura}/editar-rechazado', [FacturaController::class, 'editar'])->name('factura.edit');
 
     Route::get('/sifen/{factura}/ver', [SifenController::class, 'enviar_sifen'])->name('sifen.enviar_sifen');
     Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');

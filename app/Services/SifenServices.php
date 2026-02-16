@@ -674,7 +674,7 @@ class SifenServices
             $url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
-            dd($xmlenvio);
+            //dd($xmlenvio);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlenvio);

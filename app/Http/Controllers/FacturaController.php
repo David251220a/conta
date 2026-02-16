@@ -18,4 +18,10 @@ class FacturaController extends Controller
         $entidad = Entidad::find(1);
         return view('factura.show', compact('factura', 'entidad'));
     }
+
+    public function editar(Factura $factura)
+    {
+        return view('factura.editar', compact('factura'));
+    }
+
 }
