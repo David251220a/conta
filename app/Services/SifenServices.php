@@ -418,7 +418,7 @@ class SifenServices
             )
         );
 
-      $objDSig->sign($key);
+        $objDSig->sign($key);
         $objDSig->add509Cert($cert);
 
         // Obtener el nodo de firma
@@ -497,7 +497,7 @@ class SifenServices
             $absolutePathFirma = Storage::disk('public')->path($sifen->documento_xml);
             $xml = file_get_contents($absolutePathFirma);
             $xml = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xml);
-            
+
             if (!Storage::disk('public')->exists($sifen->documento_xml)) {
                 throw new \Exception('Archivo XML firmado no encontrado.');
             }
@@ -529,7 +529,7 @@ class SifenServices
 
             $zip->addFile($absoluteLoteXml, basename($relativePathFirma));
             $zip->close();
-            
+
             $url = config('facturacion.link_api')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
 
             $ruta_cert = storage_path('app/keys/firma.p12');
@@ -562,7 +562,7 @@ class SifenServices
                     </rEnvioLote>
                 </env:Body>
             </env:Envelope>';
-        
+
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlenvio);
             $response = curl_exec($ch);
             if ($response === false) {
@@ -586,7 +586,7 @@ class SifenServices
                 }
 
                 $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
-                
+
                 $fecha_proceso = (string) $xmlResponse->xpath('//ns:dFecProc')[0];
                 $dProtConsLoteXPath = $xmlResponse->xpath('//ns:dProtConsLote');
                 $dProtConsLote = isset($dProtConsLoteXPath[0]) ? (string) $dProtConsLoteXPath[0] : '';
@@ -652,12 +652,12 @@ class SifenServices
             }
             $absolutePathFirma = Storage::disk('public')->path($sifen->documento_xml);
             $xmlFirmado = file_get_contents($absolutePathFirma); // <rDE ...>...</rDE> firmado (no tocar)
-            
+
             // 2) SOAP siRecepDE (un solo DE)
             $codSecuencia1 = $sifen->secuencia; // tu correlativo numérico (1–15 dígitos)}
             $xmlFirmado = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xmlFirmado);
             $xmlFirmado = trim($xmlFirmado);
-            
+
             $xmlenvio = '
             <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
             <soap:Header/>
@@ -674,7 +674,7 @@ class SifenServices
             $url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
-            //dd($xmlenvio);
+            dd($xmlenvio);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlenvio);
@@ -710,12 +710,12 @@ class SifenServices
             }
 
             $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
-            
+
             $get = function ($path) use ($xmlResponse) {
                 $n = $xmlResponse->xpath($path);
                 return isset($n[0]) ? (string)$n[0] : '';
             };
-            
+
             // Campos típicos de rRetEnviDe/rProtDe
             $estado    = $get('//ns:dEstRes');                // Aprobado / Aprobado con observación / Rechazado
             $cod       = $get('//ns:dCodRes');                // p.ej. 0160, etc.
@@ -740,7 +740,7 @@ class SifenServices
             // 7) Retorno amigable
             $ok = ($enviado === 'Y');
             $texto = "Estado: ".($estado ?: 'RECHAZADO')." | Código: ".($cod ?: '—')." | Mensaje: ".($mensaje ?: '—');
-            
+
             return [
                 $ok,
                 $texto,
@@ -808,7 +808,7 @@ class SifenServices
             $mensaje_res   = (string) $xmlRes->xpath('//ns:dMsgResLot')[0];
 
             $xmls = explode('<?xml', $response);
-            
+
             foreach ($xmls as $xml) {
                 if (empty(trim($xml))) {
                     continue;
@@ -849,7 +849,7 @@ class SifenServices
                     'sifen_estado' => $dEstRes,
                     'sifen_mensaje' => $dMsgRes
                 ]);
-                
+
             }
         }
 
@@ -860,7 +860,7 @@ class SifenServices
     {
 
         try {
-            
+
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
             $url = config('facturacion.link_consulta_cdc')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];

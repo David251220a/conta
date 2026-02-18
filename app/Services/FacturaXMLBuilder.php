@@ -57,10 +57,10 @@ class FacturaXMLBuilder
                 $dNomEmi  = "DE generado en ambiente de prueba - sin valor comercial ni fiscal"; //en caso de hacer en ambiente de prueba llevar
                 // $dNumTim  = $row['timbrado_test']; ESTE Y EL DE ABAJO ESTA DECLARADO ARRIBA
                 // $dFeIniT  = $row['fecha_timbrado'];
-                $_codeCSC = "001";
+                $_codeCSC = "003";
                 $_dCSC    = "ABCD0000000000000000000000000000";
+                //$_dCSC    = "B326123F3fd345C3a60F333B2025Ee9E";
             }
-            
             $iTImp = '1';
             $cActEco = "";
             foreach ($this->entidad->actividades as $item) {
@@ -69,7 +69,7 @@ class FacturaXMLBuilder
                 $cActEco .= "<dDesActEco>" . htmlspecialchars($item->descripcion, ENT_XML1, 'UTF-8') . "</dDesActEco>\n";
                 $cActEco .= "</gActEco>\n";
             }
-            
+
             $gOblAfe = "";
             foreach ($this->entidad->obligaciones as $item) {
                 $gOblAfe .= "<gOblAfe>\n";
@@ -399,7 +399,8 @@ class FacturaXMLBuilder
             $cdc = $cdcTemp . $dvCDC;
 
             //$fechaHoraFirma = date('Y-m-d\TH:i:s');
-            $fechaHoraFirma = $this->sifenFechaHoraFirma(); 
+            //$fechaHoraFirma = $this->sifenFechaHoraFirma();
+            $fechaHoraFirma = $dFeEmiDE;
             $genXML = '<?xml version="1.0" encoding="UTF-8"?>
             <rDE xmlns="http://ekuatia.set.gov.py/sifen/xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://ekuatia.set.gov.py/sifen/xsd siRecepDE_v150.xsd">
                 <dVerFor>150</dVerFor>
@@ -1081,7 +1082,7 @@ class FacturaXMLBuilder
 
         // Formato SIFEN: YYYY-MM-DDTHH:mm:ss (sin offset)
         return $dt->format('Y-m-d\TH:i:s');
-}
+    }
 
 }
 

@@ -25,7 +25,10 @@ class FacturaJsonBuilder
     public function jsonContado()
     {
         $codigoSeguridadAleatorio = random_int(100000000, 999999999);
-        $fecha = $this->factura->fecha_factura . ' ' . now()->format('H:i:s');
+        // $fecha = $this->factura->created_at . ' ' . now()->format('H:i:s');
+       $fecha = $this->factura->created_at
+        ->timezone('America/Asuncion')
+        ->format('Y-m-d\TH:i:s');
 
         $json = [
             'fecha' => $fecha,
