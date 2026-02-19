@@ -6,6 +6,7 @@ use App\Models\Entidad;
 use App\Models\Factura;
 use App\Models\Sifen;
 use App\Models\Timbrado;
+use App\Models\Secuencia;
 use Carbon\Carbon;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
@@ -654,7 +655,10 @@ class SifenServices
             $xmlFirmado = file_get_contents($absolutePathFirma); // <rDE ...>...</rDE> firmado (no tocar)
 
             // 2) SOAP siRecepDE (un solo DE)
-            $codSecuencia1 = $sifen->secuencia; // tu correlativo numérico (1–15 dígitos)}
+            //$codSecuencia1 = $sifen->secuencia + 1; // tu correlativo numérico (1–15 dígitos)}
+            $aux_secuencia = Secuencia::find(1);
+            $codSecuencia1 = $aux_secuencia->secuencia  + 1;
+            $aux_secuencia->update(['secuencia' => $codSecuencia1]);
             $xmlFirmado = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xmlFirmado);
             $xmlFirmado = trim($xmlFirmado);
 
@@ -674,7 +678,7 @@ class SifenServices
             $url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
-            dd($xmlenvio);
+            // dd($xmlenvio, $codSecuencia1);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlenvio);
@@ -705,6 +709,7 @@ class SifenServices
                     'sifen_envio_xml'          => $response,
                     'enviado_sifen'            => 'N',
                     'sifen_estado'             => 'RECHAZADO',
+                    'secuencia'             => $codSecuencia1,
                 ]);
                 return [false, 'Respuesta no válida (no XML).'];
             }
@@ -735,6 +740,7 @@ class SifenServices
                 'enviado_sifen'            => $enviado,
                 'sifen_estado'             => strtoupper($estado ?: 'RECHAZADO'),
                 'cdc'                      => $cdcResp ?: $sifen->cdc, // mantener CDC si no viene
+                'secuencia'             => $codSecuencia1,
             ]);
 
             // 7) Retorno amigable
@@ -912,6 +918,74 @@ class SifenServices
                 'codigo'  => $codigo,
                 'mensaje' => html_entity_decode($mensaje),
                 'raw'     => $response,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Fallo al generar XML: ' . $e->getMessage());
+            throw new \Exception($e->getMessage());
+        }
+
+    }
+
+    public function consultar_cdc_sin_modelo($sifen)
+    {
+
+        try {
+
+            $ruta_cert = storage_path('app/keys/firma.p12');
+            $password = 'LqO#9j0E';
+            // $url = config('facturacion.link_consulta_cdc')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
+            $url = 'https://sifen.set.gov.py/de/ws/consultas/consulta.wsdl';
+
+            $cdc = $sifen;
+
+            // dd($this->entidad->ambiente, $url);
+            //dd($url);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/soap+xml']);
+            curl_setopt($ch, CURLOPT_SSLCERT, $ruta_cert);
+            curl_setopt($ch, CURLOPT_SSLCERTTYPE, 'P12');
+            curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $password);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>
+                <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
+                    <env:Header/>
+                    <env:Body>
+                        <rEnviConsDeRequest xmlns="http://ekuatia.set.gov.py/sifen/xsd">
+                            <dId>1</dId>
+                            <dCDC>' . $cdc . '</dCDC>
+                        </rEnviConsDeRequest>
+                    </env:Body>
+                </env:Envelope>';
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            if ($response === false) {
+                throw new \Exception("Error al consultar documento por CDC");
+            }
+
+            // Parsear la respuesta
+
+            $xmlResponse = simplexml_load_string($response);
+            $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
+
+            $fecha   = (string) ($xmlResponse->xpath('//ns:dFecProc')[0] ?? '');
+            $estado  = (string) ($xmlResponse->xpath('//ns:dEstRes')[0] ?? '');
+            // $codigo  = (string) ($xmlResponse->xpath('//ns:gResProc/ns:dCodRes')[0] ?? '');
+            // $mensaje = (string) ($xmlResponse->xpath('//ns:gResProc/ns:dMsgRes')[0] ?? '');
+            $codigo = (string) $xmlResponse->xpath('//ns:dMsgRes')[0];
+            $mensaje     = (string) $xmlResponse->xpath('//ns:dCodRes')[0];
+            $xContenDE   = (string) $xmlResponse->xpath('//ns:xContenDE')[0];
+
+            return [
+                'fecha'   => $fecha,
+                'estado'  => $estado,
+                'codigo'  => $codigo,
+                'mensaje' => html_entity_decode($mensaje),
+                'contenido' => $xContenDE,
+                // 'raw'     => $response,
             ];
         } catch (\Exception $e) {
             Log::error('Fallo al generar XML: ' . $e->getMessage());

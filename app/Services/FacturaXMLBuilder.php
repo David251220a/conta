@@ -57,9 +57,9 @@ class FacturaXMLBuilder
                 $dNomEmi  = "DE generado en ambiente de prueba - sin valor comercial ni fiscal"; //en caso de hacer en ambiente de prueba llevar
                 // $dNumTim  = $row['timbrado_test']; ESTE Y EL DE ABAJO ESTA DECLARADO ARRIBA
                 // $dFeIniT  = $row['fecha_timbrado'];
-                $_codeCSC = "003";
+                $_codeCSC = "001";
                 $_dCSC    = "ABCD0000000000000000000000000000";
-                //$_dCSC    = "B326123F3fd345C3a60F333B2025Ee9E";
+                // $_dCSC    = "B326123F3fd345C3a60F333B2025Ee9E";
             }
             $iTImp = '1';
             $cActEco = "";

@@ -23,7 +23,7 @@ class SifenController extends Controller
     {
         $sifen = Sifen::where('factura_id', $factura->id)
         ->first();
-        
+
         if (!($sifen)){
             $builder = new FacturaJsonBuilder($factura);
             $xml = new FacturaXMLBuilder();
@@ -99,7 +99,7 @@ class SifenController extends Controller
         if($factura->tipo_documento_id == 1){
             $json = $builder->jsonContado();
         }
-        
+
         $documento =  $xml->generate($json, $factura->timbrado_id);
         $sifen->update([
             'cdc' => $documento['cdc'],
@@ -115,10 +115,17 @@ class SifenController extends Controller
             'evento' => null,
             'sifen_cod' => 0,
         ]);
-        
+
         return $this->sifen->enviar_directo($sifen);
 
         return redirect()->route('consulta.factura_pendiente')->with('message', 'Reenviado con exito.');
+    }
+
+
+    public function consultar_cdc($cdc)
+    {
+        return $this->sifen->consultar_cdc_sin_modelo($cdc);
+        return $cdc;
     }
 
 }

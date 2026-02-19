@@ -40,4 +40,5 @@ Route::group([
     Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');
 
     Route::get('/consulta/facturas-en-espera-o-rechazado', [ConsultaController::class, 'facturas'])->name('consulta.factura_pendiente');
+    Route::get('/consulta/{cdc}/consultar/cdc', [SifenController::class, 'consultar_cdc'])->name('consulta.consulta_cdc');
 });
