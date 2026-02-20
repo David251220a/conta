@@ -31,6 +31,7 @@ return new class extends Migration
             $table->decimal('monto_devuelto', 12, 0)->default(0);
             $table->foreignId('estado_id')->constrained();
             $table->tinyInteger('anulado')->default(0);
+            $table->tinyInteger('generado_sifen')->default(0);
             $table->date('fecha_anulado')->nullable();
             $table->foreignId('user_id')->constrained();
             $table->unsignedBigInteger('usuario_anulacion')->nullable();

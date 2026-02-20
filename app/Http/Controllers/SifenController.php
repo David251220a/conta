@@ -8,6 +8,7 @@ use App\Models\Sifen;
 use App\Services\FacturaJsonBuilder;
 use App\Services\FacturaXMLBuilder;
 use App\Services\SifenServices;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class SifenController extends Controller
@@ -126,6 +127,26 @@ class SifenController extends Controller
     {
         return $this->sifen->consultar_cdc_sin_modelo($cdc);
         return $cdc;
+    }
+
+
+    public function consulta(Request $request)
+    {
+        $fecha_desde = Carbon::now()->format('Y-m-d');
+        $fecha_hasta = Carbon::now()->format('Y-m-d');
+
+        if($request->fecha_desde){
+            $fecha_desde = $request->fecha_desde;
+        }
+
+        if($request->fecha_hasta){
+            $fecha_hasta = $request->fecha_hasta;
+        }
+
+        $data = Factura::whereBetween('fecha_factura', [$fecha_desde, $fecha_hasta])
+        ->get();
+
+        return view('consulta.fac', compact('fecha_desde', 'fecha_hasta', 'data'));
     }
 
 }

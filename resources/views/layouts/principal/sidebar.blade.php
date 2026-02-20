@@ -37,19 +37,22 @@
                 </div>
             </a>
             <ul id="dashboard" data-parent="#accordionExample"
-                @if(Str::startsWith(Route::currentRouteName(), 'consulta.factura_pendiente')) 
+                @if((Str::startsWith(Route::currentRouteName(), 'consulta.factura_pendiente'))
+                   || (Str::startsWith(Route::currentRouteName(), 'consulta.factura')))
                     class="collapse submenu list-unstyled show"
                 @else
                     class="collapse submenu list-unstyled"
                 @endif
             >
-                <li
-                @if(Str::startsWith(Route::currentRouteName(), 'consulta.factura_pendiente')) class="active" @endif
-                >
-                    <a href="{{route('consulta.factura_pendiente')}}"> Facturas </a>
+                <li @if(Route::currentRouteName() == 'consulta.factura') class="active" @endif>
+                    <a href="{{route('consulta.factura')}}"> Factura </a>
+                </li>
+
+                <li @if(Route::currentRouteName() == 'consulta.factura_pendiente') class="active" @endif>
+                    <a href="{{route('consulta.factura_pendiente')}}"> Sifen </a>
                 </li>
             </ul>
-        </li> 
+        </li>
 
         {{-- <li class="menu">
             <a href="{{route('cobro.registro')}}" aria-expanded="false" class="dropdown-toggle" @if(Str::startsWith(Route::currentRouteName(), 'cobro.registro')) data-active="true" @endif>
