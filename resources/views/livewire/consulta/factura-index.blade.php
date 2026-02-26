@@ -80,6 +80,15 @@
                                                         </a>
                                                     @endif
                                                 </li>
+
+                                                <li>
+
+                                                    <a href="{{route('consulta.consultar_estado_lote', $item)}}" data-toggle="tooltip" data-placement="top" title="Edit">
+                                                        Consultar
+                                                    </a>
+
+                                                </li>
+
                                                 <li>
                                                     @if ($item->sifen_estado == 'APROBADO')
                                                         <a href="#" data-toggle="tooltip" data-placement="top" title="Anular">

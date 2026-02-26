@@ -101,7 +101,7 @@ class SifenController extends Controller
             $json = $builder->jsonContado();
         }
 
-        $documento =  $xml->generate($json, $factura->timbrado_id);
+        $documento =  $xml->generate_gpt($json, $factura->timbrado_id);
         $sifen->update([
             'cdc' => $documento['cdc'],
             'documento_xml' => $documento['archivo_xml'],
@@ -117,6 +117,7 @@ class SifenController extends Controller
             'sifen_cod' => 0,
         ]);
 
+        // return $this->sifen->enviar_zip($sifen);
         return $this->sifen->enviar_directo($sifen);
 
         return redirect()->route('consulta.factura_pendiente')->with('message', 'Reenviado con exito.');
@@ -147,6 +148,13 @@ class SifenController extends Controller
         ->get();
 
         return view('consulta.fac', compact('fecha_desde', 'fecha_hasta', 'data'));
+    }
+
+
+    public function consultar_estado_lote(Sifen $sifen)
+    {
+        return $this->sifen->consultar($sifen);
+        // return $cdc;
     }
 
 }

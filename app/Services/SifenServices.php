@@ -535,7 +535,7 @@ class SifenServices
 
             $ruta_cert = storage_path('app/keys/firma.p12');
             $password = 'LqO#9j0E';
-           //dd($url);
+            // dd($url);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             //curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
@@ -784,7 +784,7 @@ class SifenServices
         </env:Envelope>';
 
         $url = config('facturacion.link_consulta')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
-        //dd($xml2);
+        // dd($xml2, $url);
         $ch = curl_init($url);
         // Establecer opciones de solicitud cURL
         curl_setopt($ch, CURLOPT_POST, true);
@@ -796,7 +796,7 @@ class SifenServices
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $response = curl_exec($ch);
-        dd($response);
+
         if ($response === false) {
             echo 'Error de cURL: ' . curl_error($ch);
         } else {
@@ -850,7 +850,7 @@ class SifenServices
                 }
 
                 $sifen->update([
-                    'sifen_num_transaccion' => $dProtAut,
+                    // 'sifen_num_transaccion' => $dProtAut,
                     'sifen_cod' => $dCodRes,
                     'sifen_estado' => $dEstRes,
                     'sifen_mensaje' => $dMsgRes
@@ -860,6 +860,14 @@ class SifenServices
         }
 
         curl_close($ch);
+        return [
+            'fecha'   => $fecha_proceso,
+            'dProtAut'  => $dProtAut,
+            'codigo'  => $dCodRes,
+            'mensaje' => $dMsgRes,
+            'mensaje_res' => $mensaje_res,
+            // 'raw'     => $response,
+        ];
     }
 
     public function consultar_cdc(Sifen $sifen)

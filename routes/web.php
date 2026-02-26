@@ -43,4 +43,6 @@ Route::group([
     Route::get('/consulta/{cdc}/consultar/cdc', [SifenController::class, 'consultar_cdc'])->name('consulta.consulta_cdc');
 
     Route::get('/factura/consulta', [SifenController::class, 'consulta'])->name('consulta.factura');
+    Route::get('/factura/{sifen}/consultar_estado_lote', [SifenController::class, 'consultar_estado_lote'])->name('consulta.consultar_estado_lote');
+
 });
