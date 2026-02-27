@@ -45,4 +45,7 @@ Route::group([
     Route::get('/factura/consulta', [SifenController::class, 'consulta'])->name('consulta.factura');
     Route::get('/factura/{sifen}/consultar_estado_lote', [SifenController::class, 'consultar_estado_lote'])->name('consulta.consultar_estado_lote');
 
+
+
+    Route::get('/token', [SifenController::class, 'crear_token'])->name('user.crear_token');
 });

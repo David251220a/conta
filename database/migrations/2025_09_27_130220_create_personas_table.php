@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('email', 250);
             $table->string('celular', 20)->nullable();
             $table->string('ruc', 20)->nullable();
+            $table->integer('numero_casa')->default(0);
+            $table->integer('dncp')->default(0);
+            $table->boolean('diplomatico')->default(0);
             $table->foreignId('estado_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->bigInteger('usuario_modificacion');

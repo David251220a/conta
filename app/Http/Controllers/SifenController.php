@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Entidad;
+use App\Models\Establecimiento;
 use App\Models\Factura;
+use App\Models\FacturaCobro;
+use App\Models\FacturaDetalle;
+use App\Models\Persona;
 use App\Models\Secuencia;
 use App\Models\Sifen;
+use App\Models\Timbrado;
+use App\Models\User;
 use App\Services\FacturaJsonBuilder;
 use App\Services\FacturaXMLBuilder;
 use App\Services\SifenServices;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class SifenController extends Controller
@@ -155,6 +163,190 @@ class SifenController extends Controller
     {
         return $this->sifen->consultar($sifen);
         // return $cdc;
+    }
+
+    public function crear_token()
+    {
+        $user = User::find(1);
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $token = $user->createToken(
+            'token-empresa',
+            ['sifen:crear']
+        )->plainTextToken;
+
+        return response()->json([
+            'token' => $token
+        ]);
+    }
+
+    public function recepcion_sifen(Request $request)
+    {
+        $sifenString = $request->input('sifen_json');
+
+        $json = json_decode($sifenString, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json([
+                'error' => 'JSON inválido',
+                'detalle' => json_last_error_msg()
+            ], 422);
+        }
+
+        if (!isset($json['cliente'])) {
+            return response()->json(['error' => 'Cliente requerido'], 422);
+        }
+
+        if (!isset($json['factura_sucursal'])) {
+            return response()->json(['error' => 'Falta el campo factura_sucursal'], 422);
+        }
+
+        if (!isset($json['factura_general'])) {
+            return response()->json(['error' => 'Falta el campo factura_general'], 422);
+        }
+
+        if (!isset($json['factura_numero'])) {
+            return response()->json(['error' => 'Falta el campo factura_numero'], 422);
+        }
+
+        $existe_factura = Factura::where('factura_sucursal', $json['factura_sucursal'])
+        ->where('factura_general', $json['factura_general'])
+        ->where('factura_numero', $json['factura_numero'])
+        ->first();
+
+        if($existe_factura){
+            return response()->json(['error' => 'Ya existe factura cargado con este numero: ' . $json['factura_sucursal'] . '-' . $json['factura_general']. '-' . $json['factura_numero']], 422);
+        }
+
+        $existe_registro = Factura::where('registro_id', $json['registro_id'])
+        ->first();
+
+        if($existe_registro){
+            return response()->json(['error' => 'Ya existe factura con este IdRegistro: ' . $json['registro_id'] ], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($json) {
+                
+                $data = $json;
+                $cliente = $data['cliente'];
+                $user = auth()->user();
+
+                $persona = Persona::updateOrCreate([
+                    'documento' => $cliente['documento']
+                ],
+                [
+                    'nombre' => $cliente['nombre'],
+                    'apellido' => $cliente['apellido'],
+                    'tipo_persona_id' => 1,
+                    'fecha_nacimiento' => null,
+                    'sexo_id' => 1,
+                    'estado_civil' => 1,
+                    'email' => $cliente['correo'],
+                    'celular' => $cliente['celular'],
+                    'ruc' => $cliente['ruc'],
+                    'numero_casa' => $cliente['numeroCasa'],
+                    'dncp' => $cliente['numeroCasa'],
+                    'diplomatico' => $cliente['diplomatico'],
+                    'estado_id' => 1,
+                    'user_id' => $user->id,
+                    'usuario_modificacion' => $user->id
+                ]);
+
+                $timbrado = Timbrado::find(1);
+                $entidad = Entidad::find(1);
+                $establecimiento = Establecimiento::find($data['establecimiento_id']);
+                if (!$establecimiento) {
+                    throw new \Exception('No existe establecimiento con este Id: ' . $data['establecimiento_id']);
+                }
+
+                // Validar que haya items
+                if (empty($data['items']) || !is_array($data['items'])) {
+                    throw new \Exception('La factura debe traer items');
+                }
+
+                $factura = Factura::create([
+                    'persona_id' => $persona->id,
+                    'timbrado_id' => $timbrado->id,
+                    'establecimiento_id' => $establecimiento->id,
+                    'factura_sucursal' => $data['factura_sucursal'],
+                    'factura_general' => $data['factura_general'],
+                    'factura_numero' => $data['factura_numero'],
+                    'fecha_factura' => $data['fecha_factura'],
+                    'tipo_documento_id' => $data['tipo_factura'],
+                    'tipo_transaccion_id' => $entidad->tipo_transaccion_id,
+                    'condicion_pago' => $data['condicionPago'],
+                    'concepto' => $data['concepto_factura'],
+                    'monto_total' => $data['totalPagado'],
+                    'monto_abonado' => $data['totalPagado'],
+                    'monto_devuelto' => 0,
+                    'estado_id' => 1,
+                    'anulado' => 0,
+                    'fecha_anulado' => null,
+                    'user_id' => $user->id,
+                    'usuario_anulacion' => null
+                ]);
+
+                foreach ($data['items'] as $item) {
+                    $ivaAfecta = $item['ivaTasa'] ?? 0;
+                    $exento = 0;
+                    $grabado = 0;
+                    if ($ivaAfecta == 0) {
+                        throw new \Exception('Iva Afectado no puede ser cero.');
+                    }
+
+                    if($ivaAfecta == 3){
+                        $grabado = 0;
+                        $exento = $item['precioTotal'] ?? 0;
+                    }
+
+                    if($ivaAfecta == 5){
+                        $grabado = $item['baseGravItem'] ?? 0;
+                        $exento = 0;
+                    }
+                    
+                    if($ivaAfecta == 10){
+                        $grabado = $item['baseGravItem'] ?? 0;
+                        $exento = 0;
+                    }
+
+                    FacturaDetalle::create([
+                        'factura_id'     => $factura->id,
+                        'descripcion'    => $item['descripcion'],
+                        'codigo'         => $item['codigo'] ?? null,
+                        //'unidad_medida'  => $item['unidadMedida'] ?? null,
+                        'iva_afecta'     => $ivaAfecta,
+                        'cantidad'       => $item['cantidad'],
+                        'precio_unitario'=> $item['precioUnitario'],
+                        'monto_total'   => $item['precioTotal'],
+                        'exento' => $exento,
+                        'grabado' => $grabado,
+                        'iva'       => $item['IvaItem'] ?? 0,
+                    ]);
+                }
+
+                foreach ($data['forma_pago'] as $item) {
+
+                    FacturaCobro::create([
+                        'factura_id'     => $factura->id,
+                        'forma_cobro_id'    => $item['tipoPago'],
+                        'banco_id'    => $item['banco_id'],
+                        'monto'    => $item['banco_id'],
+                    ]);
+                }
+
+            });
+
+            return response()->json(['ok' => true]);
+
+        }catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        
+        };
+        
     }
 
 }

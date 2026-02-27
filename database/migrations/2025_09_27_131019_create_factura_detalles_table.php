@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('factura_detalles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('factura_id')->constrained();
+            $table->integer('codigo')->default(0);
             $table->string('descripcion', 250);
             $table->integer('cantidad')->default(1);
             $table->decimal('precio_unitario', 12, 0)->default(0);

@@ -40,6 +40,7 @@ return new class extends Migration
             $table->text('sifen_envio_xml')->nullable();
             $table->text('sifen_respuesta_consulta_xml')->nullable();
             $table->string('enviado_sifen', 100)->nullable();
+            $table->integer('sifen_idprod');
             $table->timestamps();
         });
     }

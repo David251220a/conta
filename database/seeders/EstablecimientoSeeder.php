@@ -25,8 +25,8 @@ class EstablecimientoSeeder extends Seeder
             'telefono' => '021497189',
             'descripcion' => 'Nuestra Señora',
             'direccion' => 'Benjamin Constant 955 c/ Colon y Montevideo',
-            'sucursal' => '006',
-            'general' => '001',
+            'sucursal' => '001',
+            'general' => '003',
             'estado_id' => 1,
             'user_id' => 1,
         ]);

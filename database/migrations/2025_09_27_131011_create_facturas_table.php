@@ -18,10 +18,11 @@ return new class extends Migration
             $table->foreignId('persona_id')->constrained();
             $table->foreignId('timbrado_id')->constrained();
             $table->foreignId('establecimiento_id')->constrained();
+            $table->integer('registro_id')->default(0);
             $table->string('factura_sucursal');
             $table->string('factura_general');
             $table->integer('factura_numero')->default(0);
-            $table->date('fecha_factura');
+            $table->dateTime('fecha_factura');
             $table->foreignId('tipo_documento_id')->constrained()->default(1);
             $table->foreignId('tipo_transaccion_id')->constrained()->default(2);
             $table->integer('condicion_pago')->default(1)->comment('1-CONTADO 2-CREDITO');
