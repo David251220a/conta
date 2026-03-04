@@ -7,6 +7,7 @@ use App\Models\Sifen;
 use App\Services\FacturaJsonBuilder;
 use App\Services\FacturaXMLBuilder;
 use App\Services\SifenServices;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -15,6 +16,8 @@ class FacturaIndex extends Component
     protected SifenServices $sifen;
     protected FacturaJsonBuilder $jsonBuilder;
     protected FacturaXMLBuilder  $xmlBuilder;
+
+    public $fecha_desde, $fecha_hasta;
 
     public function boot(SifenServices $sifen, FacturaJsonBuilder $jsonBuilder, FacturaXMLBuilder $xmlBuilder) 
     { 
@@ -27,6 +30,8 @@ class FacturaIndex extends Component
     
     public function mount()
     {
+        $this->fecha_desde = now()->toDateString();
+        $this->fecha_hasta = now()->toDateString();
     }
 
     public function render()
@@ -37,6 +42,10 @@ class FacturaIndex extends Component
         ->whereHas('sifen', function ($q) {
             $q->where('sifen_estado', 'APROBADO');
         })
+        ->whereBetween('fecha_factura', [
+            Carbon::parse($this->fecha_desde)->startOfDay(),
+            Carbon::parse($this->fecha_hasta)->endOfDay(),
+        ])
         ->latest('id')
         ->limit(500)
         ->get();

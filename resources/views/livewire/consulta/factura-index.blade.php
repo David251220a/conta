@@ -12,6 +12,23 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div  class="col-xl-12 col-md-12 col-sm-12 col-12">
+                    <div class="form-row mb-2">
+                        <div class="form-group col-md-3">
+                            <label for="fecha_desde">Fecha Desde</label>
+                            <input wire:model.defer="fecha_desde" type="date" class="form-control">
+                        </div>
+
+
+                        <div class="form-group col-md-3">
+                            <label for="fecha_hasta">Fecha Hesde</label>
+                            <input wire:model.defer="fecha_hasta" type="date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row mt-1">
                 <div  class="col-xl-12 col-md-12 col-sm-12 col-12">
                     <div class="table-responsive">
