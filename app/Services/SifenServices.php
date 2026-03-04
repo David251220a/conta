@@ -237,6 +237,8 @@ class SifenServices
             $dEstResNode  = $xml->xpath('//sifen:dEstRes');
             $dCodResNode  = $xml->xpath('//sifen:dCodRes');
             $dMsgResNode  = $xml->xpath('//sifen:dMsgRes');
+            $dProtAutNode = $xml->xpath('//sifen:dProtAut');
+            $dProtAut = $dProtAutNode ? (string)$dProtAutNode[0] : null;
 
             if (!$dEstResNode || !$dFecProcNode || !$dMsgResNode || !$dCodResNode) {
                 throw new \Exception('Nodos esperados no encontrados en respuesta de SIFEN.');
@@ -259,6 +261,7 @@ class SifenServices
                 'sifen_evento_codrespuesta' => $dCodRes,
                 'sifen_evento_msjrespuesta' => $dMsgRes,   // <-- creá/usa este campo
                 'sifen_evento_estado' => $dEstRes,
+                'sifen_cod' => $dProtAut
             ]);
 
             return [
