@@ -213,10 +213,15 @@ class SifenController extends Controller
             return response()->json(['error' => 'Falta el campo factura_numero'], 422);
         }
 
+        if (!isset($sifen_json['condicionPago'])) {
+            return response()->json(['error' => 'Falta el campo condicionPago'], 422);
+        }
+
         $existe_factura = Factura::where('factura_sucursal', $sifen_json['factura_sucursal'])
         ->where('factura_general', $sifen_json['factura_general'])
         ->where('factura_numero', $sifen_json['factura_numero'])
         ->where('estado_id', 1)
+        ->where('condicion_pago', $sifen_json['condicionPago'])
         ->first();
 
         if($existe_factura){
@@ -290,6 +295,7 @@ class SifenController extends Controller
                     'monto_devuelto' => 0,
                     'estado_id' => 1,
                     'anulado' => 0,
+                    'generado_sifen' => 1,
                     'fecha_anulado' => null,
                     'user_id' => $user->id,
                     'usuario_anulacion' => null
@@ -384,7 +390,7 @@ class SifenController extends Controller
                     'documento_xml'=> $documento['archivo_xml'],
                     'fecha_firma'  => $documento['fecha_firma'],
                     'link_qr'      => $documento['link_qr'] ?? '',
-                    'sifen_estado' => 'PENDIENTE',
+                    'sifen_estado' => 'RECHAZADO',
                 ]);
 
                 return $sifen;

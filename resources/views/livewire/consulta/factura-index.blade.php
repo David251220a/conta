@@ -7,7 +7,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9">
                         </path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                        <strong>Información!</strong> Facturas Rechazadas o Pendiente de Respuesta.
+                        <strong>Información!</strong> Facturas Contado
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                                                         <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line><line x1="10.88" y1="21.94" x2="15.46" y2="14"></line></svg>
                                                     </a>
 
-                                                    <a class="ml-2" href="{{route('factura.show', $item)}}" target="__blank" data-toggle="tooltip" data-placement="top" title="Ver Factura">
+                                                    <a class="ml-2" href="{{route('factura.show', $item)}}" data-toggle="tooltip" data-placement="top" title="Ver Factura">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                         class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                     </a>

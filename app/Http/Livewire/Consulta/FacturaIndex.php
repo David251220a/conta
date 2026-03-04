@@ -31,7 +31,12 @@ class FacturaIndex extends Component
 
     public function render()
     {
-        $data = Factura::where('estado_id', 1)
+        $data = Factura::with('sifen')
+        ->where('estado_id', 1)
+        ->where('condicion_pago', 1)
+        ->whereHas('sifen', function ($q) {
+            $q->where('sifen_estado', 'APROBADO');
+        })
         ->latest('id')
         ->limit(500)
         ->get();
