@@ -8,8 +8,6 @@
 
 @section('content')
 
-    @include('varios.mensaje')
-
     <div class="col-lg-12 layout-spacing">
         <div class="statbox widget box box-shadow">
             <div class="widget-content widget-content-area">

@@ -216,6 +216,7 @@ class SifenController extends Controller
         $existe_factura = Factura::where('factura_sucursal', $sifen_json['factura_sucursal'])
         ->where('factura_general', $sifen_json['factura_general'])
         ->where('factura_numero', $sifen_json['factura_numero'])
+        ->where('estado_id', 1)
         ->first();
 
         if($existe_factura){
@@ -223,6 +224,7 @@ class SifenController extends Controller
         }
 
         $existe_registro = Factura::where('registro_id', $sifen_json['registro_id'])
+        ->where('estado_id', 1)
         ->first();
 
         if($existe_registro){
@@ -408,9 +410,17 @@ class SifenController extends Controller
         ]);
 
         $xml_evento = $this->sifen->cancelacion($factura->sifen, $request->motivo);
-        $secuencia = Secuencia::find(1);
-        return $this->sifen->envioEvento($factura->sifen, $xml_evento, $secuencia->secuencia, 2);
-        return $request->all();
+        $fecha_anulado = now()->toDateString();
+        $evento =  $this->sifen->envioEvento($factura->sifen, $xml_evento, $factura->sifen->secuencia_evento, 2);
+        if (($evento['status'] ?? '') === 'Aprobado') {
+            $factura->update([
+                'anulado' => 1,
+                'fecha_anulado' => $fecha_anulado,
+                'usuario_anulacion' => auth()->user()->id,
+                'motivo_anulacion' => $request->motivo,
+            ]);
+        }
+        return redirect()->route('consulta.factura')->with('message', $evento['mensaje']);
     }
     
 }

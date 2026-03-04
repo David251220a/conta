@@ -29,6 +29,11 @@ return new class extends Migration
             $table->dateTime('fecha_firma');
             $table->text('link_qr');
             $table->string('evento')->nullable();
+            $table->integer('sifen_evento_codrespuesta')->default(0);
+            $table->text('sifen_evento_msjrespuesta')->nullable();
+            $table->string('sifen_evento_estado', 20)->nullable();
+            $table->text('sifen_evento_xml')->nullable();
+            $table->unsignedBigInteger('secuencia_evento')->default(0);
             $table->unsignedBigInteger('sifen_cod');
             $table->integer('tipo_transaccion');
             $table->integer('condicion_pago')->default(1);
@@ -40,7 +45,7 @@ return new class extends Migration
             $table->text('sifen_envio_xml')->nullable();
             $table->text('sifen_respuesta_consulta_xml')->nullable();
             $table->string('enviado_sifen', 100)->nullable();
-            $table->integer('sifen_idprod');
+            $table->bigInteger('sifen_idprod');
             $table->timestamps();
         });
     }

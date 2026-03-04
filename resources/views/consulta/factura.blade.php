@@ -8,6 +8,8 @@
 
 @section('content')
 
+    @include('varios.mensaje')
+
     @livewire('consulta.factura-index')
 
 @endsection
