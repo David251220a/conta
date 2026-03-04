@@ -66,6 +66,7 @@ class SifenController extends Controller
                 'correo_enviado' => 'N',
                 'enviado_sifen' => 'N',
                 'sifen_respuesta_consulta_xml' => '',
+                'sifen_idprod' => 0
             ]);
             $secuencia->secuencia = $secuencia->secuencia + 1;
             $secuencia->update();
@@ -187,7 +188,7 @@ class SifenController extends Controller
     {
         $sifenString = $request->input('sifen_json');
 
-        $json = json_decode($sifenString, true);
+        $sifen_json = json_decode($sifenString, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
@@ -196,42 +197,43 @@ class SifenController extends Controller
             ], 422);
         }
 
-        if (!isset($json['cliente'])) {
+        if (!isset($sifen_json['cliente'])) {
             return response()->json(['error' => 'Cliente requerido'], 422);
         }
 
-        if (!isset($json['factura_sucursal'])) {
+        if (!isset($sifen_json['factura_sucursal'])) {
             return response()->json(['error' => 'Falta el campo factura_sucursal'], 422);
         }
 
-        if (!isset($json['factura_general'])) {
+        if (!isset($sifen_json['factura_general'])) {
             return response()->json(['error' => 'Falta el campo factura_general'], 422);
         }
 
-        if (!isset($json['factura_numero'])) {
+        if (!isset($sifen_json['factura_numero'])) {
             return response()->json(['error' => 'Falta el campo factura_numero'], 422);
         }
 
-        $existe_factura = Factura::where('factura_sucursal', $json['factura_sucursal'])
-        ->where('factura_general', $json['factura_general'])
-        ->where('factura_numero', $json['factura_numero'])
+        $existe_factura = Factura::where('factura_sucursal', $sifen_json['factura_sucursal'])
+        ->where('factura_general', $sifen_json['factura_general'])
+        ->where('factura_numero', $sifen_json['factura_numero'])
         ->first();
 
         if($existe_factura){
-            return response()->json(['error' => 'Ya existe factura cargado con este numero: ' . $json['factura_sucursal'] . '-' . $json['factura_general']. '-' . $json['factura_numero']], 422);
+            return response()->json(['error' => 'Ya existe factura cargado con este numero: ' . $sifen_json['factura_sucursal'] . '-' . $sifen_json['factura_general']. '-' . $sifen_json['factura_numero']], 422);
         }
 
-        $existe_registro = Factura::where('registro_id', $json['registro_id'])
+        $existe_registro = Factura::where('registro_id', $sifen_json['registro_id'])
         ->first();
 
         if($existe_registro){
-            return response()->json(['error' => 'Ya existe factura con este IdRegistro: ' . $json['registro_id'] ], 422);
+            return response()->json(['error' => 'Ya existe factura con este IdRegistro: ' . $sifen_json['registro_id'] ], 422);
         }
 
         try {
-            DB::transaction(function () use ($json) {
+
+            $sifen = DB::transaction(function () use ($sifen_json) {
                 
-                $data = $json;
+                $data = $sifen_json;
                 $cliente = $data['cliente'];
                 $user = auth()->user();
 
@@ -276,6 +278,7 @@ class SifenController extends Controller
                     'factura_general' => $data['factura_general'],
                     'factura_numero' => $data['factura_numero'],
                     'fecha_factura' => $data['fecha_factura'],
+                    'registro_id' => $data['registro_id'],
                     'tipo_documento_id' => $data['tipo_factura'],
                     'tipo_transaccion_id' => $entidad->tipo_transaccion_id,
                     'condicion_pago' => $data['condicionPago'],
@@ -334,13 +337,61 @@ class SifenController extends Controller
                         'factura_id'     => $factura->id,
                         'forma_cobro_id'    => $item['tipoPago'],
                         'banco_id'    => $item['banco_id'],
-                        'monto'    => $item['banco_id'],
+                        'monto'    => $item['monto'],
                     ]);
                 }
 
+                $sifen = Sifen::create([
+                    'factura_id' => $factura->id,
+                    'cdc' => '',
+                    'tipo_doc' => $factura->tipo_documento_id,
+                    'documento_xml' => '',
+                    'documento_pdf' => '',
+                    'documento_zip' => null,
+                    'zipeado' => 'N',
+                    'secuencia' => 0,
+                    'sifen_num_transaccion' => 0,
+                    'sifen_estado' => 'PENDIENTE',
+                    'sifen_mensaje' => '',
+                    'fecha_firma' => Carbon::now(),
+                    'link_qr' => '',
+                    'evento' => null,
+                    'sifen_cod' => 0,
+                    'tipo_transaccion' => $factura->tipo_transaccion_id,
+                    'condicion_pago' => $factura->condicion_pago,
+                    'moneda' => 'PYG',
+                    'correo_enviado' => 'N',
+                    'enviado_sifen' => 'N',
+                    'sifen_respuesta_consulta_xml' => '',
+                    'sifen_idprod' => 0
+                ]);
+
+                // Generar XML y ACTUALIZAR sifen antes de enviar
+                $builder = new FacturaJsonBuilder($factura);
+                $xmlBuilder = new FacturaXMLBuilder();
+
+                $json = [];
+                if ((int)$factura->tipo_documento_id === 1) {
+                    $json = $builder->jsonContado();
+                }
+
+                $documento = $xmlBuilder->generate($json, $factura->timbrado_id);
+
+                $sifen->update([
+                    'cdc'          => $documento['cdc'],
+                    'documento_xml'=> $documento['archivo_xml'],
+                    'fecha_firma'  => $documento['fecha_firma'],
+                    'link_qr'      => $documento['link_qr'] ?? '',
+                    'sifen_estado' => 'PENDIENTE',
+                ]);
+
+                return $sifen;
+
             });
 
-            return response()->json(['ok' => true]);
+            $resp = $this->sifen->enviar_directo($sifen);
+
+            return response()->json($resp);
 
         }catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -349,4 +400,17 @@ class SifenController extends Controller
         
     }
 
+    public function evento_post(Factura $factura, Request $request)
+    {
+        $request->validate([
+            'motivo' => 'required',
+            'tipo_evento' => 'required'
+        ]);
+
+        $xml_evento = $this->sifen->cancelacion($factura->sifen, $request->motivo);
+        $secuencia = Secuencia::find(1);
+        return $this->sifen->envioEvento($factura->sifen, $xml_evento, $secuencia->secuencia, 2);
+        return $request->all();
+    }
+    
 }

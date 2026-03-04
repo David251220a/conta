@@ -24,3 +24,19 @@ window.addEventListener('load', function() {
     });
 
 });
+
+function anular(id)
+{
+    swal({
+        title: 'Esta seguro de anular esta factura?',
+        text: "No puede revertir la operacion!",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        padding: '2em'
+    }).then(function(result) {
+        if (result.value) {
+            Livewire.emit('anular_factura', id);
+        }
+    })
+}

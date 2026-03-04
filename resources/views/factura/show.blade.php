@@ -199,21 +199,21 @@
                             <div class="invoice-action-btn">
 
                                 <div class="row">
-                                    {{--@if (empty($factura->sifen))--}}
+                                    @if ($factura->sifen->sifen_estado == 'RECHAZADO')
                                         <div class="col-xl-12 col-md-3 col-sm-6">
-                                            <a href="{{route('sifen.enviar_sifen', $factura)}}" class="btn btn-primary btn-send">Enviar al Sifen</a>
+                                            <a href="{{route('sifen.reenviar_sifen', $factura->sifen)}}" class="btn btn-primary btn-send">Reenviar</a>
                                         </div>
-                                    {{--@endif--}}
+                                    @endif
                                     
                                     <div class="col-xl-12 col-md-3 col-sm-6">
                                         <a href="#" class="btn btn-secondary btn-print  action-print">Imprimir</a>
                                     </div>
                                     <div class="col-xl-12 col-md-3 col-sm-6">
-                                        <a href="{{route('factura.create')}}" class="btn btn-success btn-download">Regresar a Factura</a>
+                                        <a href="{{route('consulta.factura')}}" class="btn btn-success btn-download">Regresar a Factura</a>
                                     </div>
-                                    <div class="col-xl-12 col-md-3 col-sm-6">
+                                    {{-- <div class="col-xl-12 col-md-3 col-sm-6">
                                         <a href="#" class="btn btn-dark btn-edit">Editar</a>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                             

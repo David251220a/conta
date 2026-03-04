@@ -923,7 +923,8 @@ class FacturaXMLBuilder
                 'cdc' => $cdc,
                 'archivo_xml' => $documento_xml,
                 'link_qr' => $linkQR,
-                'fecha_firma' => $fechaHoraFirma
+                'fecha_firma' => $fechaHoraFirma,
+                'nombreArchivo' => $nombreArchivo
             ];
 
         } catch (\Exception $e) {

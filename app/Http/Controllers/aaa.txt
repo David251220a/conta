@@ -1,8 +1,8 @@
 $json = '{
-                        "fecha_factura": "2025-01-17 17:25:26",
+                        "fecha_factura": "2026-03-03 15:25:26",
                         "factura_sucursal": "001",
                         "factura_general": "003",
-                        "factura_numero": "0000060",
+                        "factura_numero": "0000001",
                         "concepto_factura": "Información de interes por parte del emisor",
                         "establecimiento_id": 1,
                         "tipo_factura": 1,
@@ -11,8 +11,8 @@ $json = '{
                         "cliente": {
                             "ruc": "4918642",
                             "documento": "4918642",
-                            "nombre": "NOMBRE CLIENTE",
-                            "apellido": "APELLIDO",
+                            "nombre": "JUAN",
+                            "apellido": "PEREZ",
                             "correo": "correo@gmail.com",
                             "celular": "0976820842",
                             "numeroCasa": 0,

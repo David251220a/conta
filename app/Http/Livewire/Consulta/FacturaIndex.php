@@ -2,10 +2,12 @@
 
 namespace App\Http\Livewire\Consulta;
 
+use App\Models\Factura;
 use App\Models\Sifen;
 use App\Services\FacturaJsonBuilder;
 use App\Services\FacturaXMLBuilder;
 use App\Services\SifenServices;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class FacturaIndex extends Component
@@ -20,6 +22,8 @@ class FacturaIndex extends Component
         $this->jsonBuilder = $jsonBuilder;
         $this->xmlBuilder  = $xmlBuilder;
     }
+
+    protected $listeners = ['anular_factura'];
     
     public function mount()
     {
@@ -27,12 +31,27 @@ class FacturaIndex extends Component
 
     public function render()
     {
-        $data = Sifen::where('sifen_estado', '<>', 'APROBADO')
+        $data = Factura::where('estado_id', 1)
         ->latest('id')
-        ->limit(1000)
+        ->limit(500)
         ->get();
 
         return view('livewire.consulta.factura-index', compact('data'));
+    }
+
+
+    public function anular_factura($id)
+    {
+        try {
+            DB::transaction(function () use ($id) { 
+                $factura = Factura::find($id);
+                $factura->update(['estado_id' => 2]);
+            });
+            $this->emit('mensaje_exitoso', 'Factura Anulado con exito.');
+        }catch (\Throwable $e) {
+            $this->emit('mensaje_error', $e->getMessage());
+        };
+       
     }
 
     public function consultarPendientes()

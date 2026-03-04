@@ -40,8 +40,8 @@ class EntidadSeeder extends Seeder
 
         Timbrado::create([
             'entidad_id' => 1,
-            'timbrado' => '18043139',
-            'fecha_inicio' => '2025-05-21',
+            'timbrado' => '80000492',
+            'fecha_inicio' => '2024-12-04',
             'estado_id' => 1,
         ]);
 

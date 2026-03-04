@@ -35,17 +35,13 @@ Route::group([
     Route::post('/factura/crear', [FacturaController::class, 'create'])->name('factura.store');
     Route::get('/factura/{factura}/ver-factura', [FacturaController::class, 'show'])->name('factura.show');
     Route::get('/factura/{factura}/editar-rechazado', [FacturaController::class, 'editar'])->name('factura.edit');
+    Route::get('/factura/{factura}/eventos', [FacturaController::class, 'evento'])->name('factura.evento');
+    Route::post('/factura/{factura}/eventos', [SifenController::class, 'evento_post'])->name('factura.evento_post');
 
     Route::get('/sifen/{factura}/ver', [SifenController::class, 'enviar_sifen'])->name('sifen.enviar_sifen');
     Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');
 
-    Route::get('/consulta/facturas-en-espera-o-rechazado', [ConsultaController::class, 'facturas'])->name('consulta.factura_pendiente');
-    Route::get('/consulta/{cdc}/consultar/cdc', [SifenController::class, 'consultar_cdc'])->name('consulta.consulta_cdc');
-
-    Route::get('/factura/consulta', [SifenController::class, 'consulta'])->name('consulta.factura');
-    Route::get('/factura/{sifen}/consultar_estado_lote', [SifenController::class, 'consultar_estado_lote'])->name('consulta.consultar_estado_lote');
-
-
+    Route::get('/factura/consulta', [ConsultaController::class, 'facturas'])->name('consulta.factura');
 
     Route::get('/token', [SifenController::class, 'crear_token'])->name('user.crear_token');
 });

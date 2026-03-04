@@ -47,10 +47,6 @@
                 <li @if(Route::currentRouteName() == 'consulta.factura') class="active" @endif>
                     <a href="{{route('consulta.factura')}}"> Factura </a>
                 </li>
-
-                <li @if(Route::currentRouteName() == 'consulta.factura_pendiente') class="active" @endif>
-                    <a href="{{route('consulta.factura_pendiente')}}"> Sifen </a>
-                </li>
             </ul>
         </li>
 

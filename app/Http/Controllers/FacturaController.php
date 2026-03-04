@@ -24,4 +24,9 @@ class FacturaController extends Controller
         return view('factura.editar', compact('factura'));
     }
 
+    public function evento(Factura $factura)
+    {
+        return view('factura.evento', compact('factura'));
+    }
+
 }

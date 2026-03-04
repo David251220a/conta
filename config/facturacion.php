@@ -13,6 +13,11 @@ return [
         'test' => 'https://sifen-test.set.gov.py/de/ws/async/recibe-lote.wsdl',
     ],
 
+    'link_api_directo' => [
+        'produccion' => 'https://sifen.set.gov.py/de/ws/sync/recibe.wsdl',
+        'test' => 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl',
+    ],
+
     'link_consulta' => [
         'produccion' => 'https://sifen.set.gov.py/de/ws/consultas/consulta-lote.wsdl',
         'test' => 'https://sifen-test.set.gov.py/de/ws/consultas/consulta-lote.wsdl',
