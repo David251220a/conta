@@ -217,8 +217,7 @@ class SifenHelper
                 return 'Régimen del Mediano Productor';
                 break;
             case 8:
-                return 'Régimen Contable
-                ';
+                return 'Régimen Contable';
                 break;
 
         }

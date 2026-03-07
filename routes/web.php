@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\EntidadController;
+use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\SifenController;
 use Illuminate\Support\Facades\Auth;
@@ -44,4 +46,15 @@ Route::group([
     Route::get('/factura/consulta', [ConsultaController::class, 'facturas'])->name('consulta.factura');
 
     Route::get('/token', [SifenController::class, 'crear_token'])->name('user.crear_token');
+
+    Route::get('/entidad', [EntidadController::class, 'index'])->name('entidad.index');
+    Route::get('/entidad/firma', [EntidadController::class, 'firma'])->name('entidad.firma');
+    Route::post('/entidad/firma', [EntidadController::class, 'firma_post'])->name('entidad.firma_post');
+    Route::get('/entidad/obligaciones', [EntidadController::class, 'obligaciones'])->name('entidad.obligaciones');
+    Route::post('/entidad/obligaciones', [EntidadController::class, 'obligaciones_post'])->name('entidad.obligaciones_post');
+    Route::get('/entidad/obligaciones/{obligaciones}/editar', [EntidadController::class, 'obligacion_editar'])->name('entidad.obligacion_editar');
+    Route::post('/entidad/obligaciones/{obligaciones}/editar', [EntidadController::class, 'obligacion_editar_post'])->name('entidad.obligacion_editar_post');
+
+    Route::get('/establecimiento', [EstablecimientoController::class, 'index'])->name('establecimiento.index');
+    Route::get('/establecimiento/crear', [EstablecimientoController::class, 'create'])->name('establecimiento.create');
 });

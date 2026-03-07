@@ -8,6 +8,7 @@ use App\Models\Ciudad;
 use App\Models\Departamento;
 use App\Models\Distrito;
 use App\Models\Estado;
+use App\Models\Secuencia;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -53,6 +54,10 @@ class DatabaseSeeder extends Seeder
             'descripcion' => 'ASUNCION (DISTRITO)'
         ]);
 
+        Secuencia::create([
+            'secuencia' => 0
+        ]);
+
         $this->call([
             TipoTransaccionSeeder::class,
             EntidadSeeder::class,
@@ -64,6 +69,7 @@ class DatabaseSeeder extends Seeder
             NumeracionSeeder::class,
             TipoPersonaSeeder::class,
             PersonaSeeder::class,
+            ObligacionesSeeder::class,
         ]);
     }
 }
