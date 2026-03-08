@@ -43,7 +43,7 @@ Route::group([
     Route::get('/sifen/{factura}/ver', [SifenController::class, 'enviar_sifen'])->name('sifen.enviar_sifen');
     Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');
 
-    Route::get('/factura/consulta', [ConsultaController::class, 'facturas'])->name('consulta.factura');
+    Route::get('/consulta/factura', [ConsultaController::class, 'facturas'])->name('consulta.factura');
 
     Route::get('/token', [SifenController::class, 'crear_token'])->name('user.crear_token');
 
@@ -57,4 +57,7 @@ Route::group([
 
     Route::get('/establecimiento', [EstablecimientoController::class, 'index'])->name('establecimiento.index');
     Route::get('/establecimiento/crear', [EstablecimientoController::class, 'create'])->name('establecimiento.create');
+    Route::post('/establecimiento/crear', [EstablecimientoController::class, 'store'])->name('establecimiento.store');
+    Route::get('/establecimiento/{establecimiento}/editar', [EstablecimientoController::class, 'edit'])->name('establecimiento.edit');
+    Route::post('/establecimiento/{establecimiento}/editar', [EstablecimientoController::class, 'update'])->name('establecimiento.update');
 });

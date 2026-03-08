@@ -20,60 +20,60 @@
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle">
                             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                             <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>
-                            Crear Establecimiento
+                            Editar Establecimiento
                         </div>
                     </div>
                 </div>
 
-                <form action="{{route('establecimiento.store')}}" method="POST">
+                <form action="{{route('establecimiento.update', $data)}}" method="POST">
                     @csrf
                     
-                    @livewire('establecimiento-create')
+                    @livewire('establecimiento-edit', ['establecimiento' => $data], key($establecimiento->id))
                     
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12">
                             <div class="form-row mb-2">
                                 <div class="form-group col-md-3">
                                     <label for="punto">Punto</label>
-                                    <input name="punto" id="punto" type="text" class="form-control" value="{{old('punto')}}" placeholder="001"  required>
+                                    <input name="punto" id="punto" type="text" class="form-control" value="{{old('punto', $data->punto)}}" placeholder="001"  required>
                                 </div>
 
                                 <div class="form-group col-md-3">
                                     <label for="numero_casa">Numero Casa</label>
-                                    <input name="numero_casa" id="numero_casa" type="text" class="form-control" value="{{old('numero_casa')}}">
+                                    <input name="numero_casa" id="numero_casa" type="text" class="form-control" value="{{old('numero_casa', $data->numero_casa)}}">
                                 </div>
 
                                 <div class="form-group col-md-3">
                                     <label for="telefono">Telefono</label>
-                                    <input name="telefono" id="telefono" type="text" class="form-control" value="{{old('telefono')}}">
+                                    <input name="telefono" id="telefono" type="text" class="form-control" value="{{old('telefono', $data->telefono)}}">
                                 </div>
 
                                 <div class="form-group col-md-6">
                                     <label for="descripcion">Establecimiento</label>
-                                    <input name="descripcion" id="descripcion" type="text" class="form-control" value="{{old('descripcion')}}">
+                                    <input name="descripcion" id="descripcion" type="text" class="form-control" value="{{old('descripcion', $data->descripcion)}}">
                                 </div>
 
 
                                 <div class="form-group col-md-6">
                                     <label for="direccion">Direccion</label>
-                                    <input name="direccion" id="direccion" type="text" class="form-control" value="{{old('direccion')}}">
+                                    <input name="direccion" id="direccion" type="text" class="form-control" value="{{old('direccion', $data->direccion)}}">
                                 </div>
 
                                 <div class="form-group col-md-3">
                                     <label for="sucursal">Factura Sucursal</label>
-                                    <input name="sucursal" id="sucursal" type="text" class="form-control" value="{{old('sucursal')}}" placeholder="001">
+                                    <input name="sucursal" id="sucursal" type="text" class="form-control" value="{{old('sucursal', $data->sucursal)}}" placeholder="001">
                                 </div>
 
                                 <div class="form-group col-md-3">
                                     <label for="general">Factura General</label>
-                                    <input name="general" id="general" type="text" class="form-control" value="{{old('general')}}" placeholder="001">
+                                    <input name="general" id="general" type="text" class="form-control" value="{{old('general', $data->general)}}" placeholder="001">
                                 </div>
 
                             </div>
 
                             <div class="form-row">
                                 <button id="btnEnviar" type="submit" class="btn btn-success">
-                                    Grabar
+                                    Actualizar
                                 </button>
                             </div>
 

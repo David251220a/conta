@@ -53,6 +53,11 @@ class FacturaIndex extends Component
         return view('livewire.consulta.factura-index', compact('data'));
     }
 
+    public function buscar()
+    {
+        
+    }
+
 
     public function anular_factura($id)
     {

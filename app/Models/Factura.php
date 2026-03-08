@@ -45,5 +45,10 @@ class Factura extends Model
         return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
     }
 
+    public function scopeRechazadas($query)
+    {
+        return $query->whereRelation('sifen', 'sifen_estado', 'RECHAZADO');
+    }
+
 
 }

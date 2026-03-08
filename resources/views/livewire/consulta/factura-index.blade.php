@@ -25,6 +25,10 @@
                             <label for="fecha_hasta">Fecha Hesde</label>
                             <input wire:model.defer="fecha_hasta" type="date" class="form-control">
                         </div>
+
+                        <div class="form-group col-md-3">
+                            <button type="button" wire:click="buscar" class="btn btn-primary btn-sm">Buscar</button>
+                        </div>
                     </div>
                 </div>
             </div>
