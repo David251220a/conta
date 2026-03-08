@@ -35,6 +35,7 @@
                             <table class="table table-bordered table-hover table-striped table-checkable table-highlight-head mb-4">
                                 <thead>
                                     <tr>
+                                        <th class="">ID#</th>
                                         <th class="">Punto</th>
                                         <th class="">Establecimiento</th>
                                         <th class="">Direccion</th>
@@ -47,6 +48,9 @@
                                 <tbody>
                                     @foreach ($data as $item)
                                         <tr>
+                                            <td>
+                                                {{$item->id}}
+                                            </td>
                                             <td class="">
                                                 {{$item->punto}}
                                             </td>

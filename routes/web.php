@@ -44,6 +44,7 @@ Route::group([
     Route::post('/sifen/{sifen}/reenviar', [SifenController::class, 'reenviar_sifen'])->name('sifen.reenviar_sifen');
 
     Route::get('/consulta/factura', [ConsultaController::class, 'facturas'])->name('consulta.factura');
+    Route::get('/consulta/{sifen}/cdc', [SifenController::class, 'consultar_cdc'])->name('consulta.consultar_cdc');
 
     Route::get('/token', [SifenController::class, 'crear_token'])->name('user.crear_token');
 

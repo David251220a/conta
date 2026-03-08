@@ -24,8 +24,8 @@ return [
     ],
 
     'link_consulta_cdc' => [
-        'produccion' => 'https://sifen.set.gov.py/de/ws/consultas/consulta',
-        'test' => 'https://sifen-test.set.gov.py/de/ws/consultas/consulta',
+        'produccion' => 'https://sifen.gov.py/de/ws/consultas/consulta.wsdl',
+        'test' => 'https://sifen-test.set.gov.py/de/ws/consultas/consulta.wsdl',
     ],
 
     'qr_version' => 'nVersion=150&Id=',

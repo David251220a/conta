@@ -90,6 +90,10 @@
                                         <td class="text-center">
                                             <ul class="table-controls">
                                                 <li>
+                                                    {{-- <a class="ml-2" href="{{route('consulta.consultar_cdc', $item->sifen)}}" target="__blank" data-toggle="tooltip" data-placement="top" title="Consulta Sifen">
+                                                        Consulta
+                                                    </a> --}}
+
                                                     <a class="ml-2" href="{{$item->sifen->link_qr}}" target="__blank" data-toggle="tooltip" data-placement="top" title="Consulta Sifen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                         class="feather feather-chrome"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="21.17" y1="8" x2="12" y2="8"></line>

@@ -832,12 +832,12 @@ class FacturaXMLBuilder
                 $doc->loadXML($xml, true);
                 //$ruta_cert = storage_path('app/keys/' . $p12_file);
                 // CAMBIAR $ruta_cert y $password en SU MOMENTO
-                $ruta_cert = storage_path('app/keys/firma.p12');
+                $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
                 $pkcs12 = file_get_contents($ruta_cert);
                 $priv_key = null;
                 $certs    = array();
                 //$password = $p12_pass;
-                $password = 'LqO#9j0E';
+                $password = $this->entidad->pass_firma;
                 if (openssl_pkcs12_read($pkcs12, $certs, $password)) {
                     $priv_key = $certs['pkey'];
                     $cert     = $certs['cert'];

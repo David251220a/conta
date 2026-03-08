@@ -28,176 +28,13 @@ class SifenServices
         $this->entidad = Entidad::find(1);
     }
 
-    public function envioEvento_ant(Sifen $sifen, string $de, int $secuencia, int $tipoEvento)
-    {
-        try {
-
-            $de  = str_replace('<?xml version="1.0" encoding="UTF-8" standalone="no"?>', '', $de);
-            $ruta_cert = storage_path('app/keys/firma.p12');
-            $password = 'LqO#9j0E';
-            $xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                        <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope"
-                            xmlns:xsd="http://ekuatia.set.gov.py/sifen/xsd">
-                            <env:Header/>
-                            <env:Body>
-                                <xsd:rEnviEventoDe xmlns:xsd="http://ekuatia.set.gov.py/sifen/xsd">
-                                    <xsd:dId>' . $secuencia . '</xsd:dId>
-                                    <xsd:dEvReg>' . $de . '</xsd:dEvReg>
-                                </xsd:rEnviEventoDe>
-                            </env:Body>
-                        </env:Envelope>';
-
-            //$url = "https://sifen.set.gov.py/de/ws/eventos/evento.wsdl";
-            $url = 'https://sifen-test.set.gov.py/de/ws/eventos/evento.wsdl';
-            //dd($xml);
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/soap+xml'));
-            curl_setopt($ch, CURLOPT_SSLCERT, $ruta_cert);
-            curl_setopt($ch, CURLOPT_SSLCERTTYPE, 'P12'); //para usar en formato.p12 en caso de .pem quitar
-            curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $password);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // dd($xml);
-            // Ejecutar solicitud cURL
-            $response = curl_exec($ch);
-
-            if ($response === false) {
-                // echo 'Error de cURL: ' . curl_error($ch);
-                throw new \Exception('ERROR DE CURL - '.curl_error($ch));
-            } else {
-
-                if ($tipoEvento == 1) {
-                    // Acceder a los datos y guardarlos en variables
-                    $xml = simplexml_load_string($response);
-                    $xml->registerXPathNamespace('env', 'http://www.w3.org/2003/05/soap-envelope');
-                    $xml->registerXPathNamespace('sifen', 'http://ekuatia.set.gov.py/sifen/xsd');
-
-                    $dFecProcNode = $xml->xpath('//sifen:dFecProc');
-                    $dEstResNode  = $xml->xpath('//sifen:dEstRes');
-                    $dCodResNode  = $xml->xpath('//sifen:dCodRes');
-                    $dMsgResNode  = $xml->xpath('//sifen:dMsgRes');
-                    if (!$dEstResNode || !$dFecProcNode || !$dMsgResNode) {
-                        throw new \Exception('Nodos esperados no encontrados en respuesta de SIFEN.');
-                    }
-
-                    $dFecProc = (string) $dFecProcNode[0];
-                    $dEstRes  = (string) $dEstResNode[0];
-                    $dCodRes  = (string) $dCodResNode[0];
-                    $dMsgRes  = (string) $dMsgResNode[0];
-
-                    $data = [
-                        'status' => $dEstRes != 'Rechazado',
-                        'code'   => $dCodRes,
-                        'mensaje' => $dMsgRes,
-                        'fecha'  => $dFecProc,
-                    ];
-
-                    $sifen->update([
-                        'evento' => 'NOMINACION',
-                        'sifen_evento_codrespuesta' => $dCodRes,
-                        'sifen_evento_msjrespuesta' => $dMsgRes,
-                        'sifen_evento_estado' => $dEstRes,
-                    ]);
-
-                    return json_encode($data);
-
-                }
-
-                //evento Cancelacion
-                if ($tipoEvento == 2) {
-                    // Acceder a los datos y guardarlos en variables
-                    $xml = simplexml_load_string($response);
-                    $xml->registerXPathNamespace('env', 'http://www.w3.org/2003/05/soap-envelope');
-                    $xml->registerXPathNamespace('sifen', 'http://ekuatia.set.gov.py/sifen/xsd');
-
-                    $dFecProcNode = $xml->xpath('//sifen:dFecProc');
-                    $dEstResNode  = $xml->xpath('//sifen:dEstRes');
-                    $dCodResNode  = $xml->xpath('//sifen:dCodRes');
-                    $dMsgResNode  = $xml->xpath('//sifen:dMsgRes');
-                    if (!$dEstResNode || !$dFecProcNode || !$dMsgResNode) {
-                        throw new \Exception('Nodos esperados no encontrados en respuesta de SIFEN.');
-                    }
-
-                    $dFecProc = (string) $dFecProcNode[0];
-                    $dEstRes  = (string) $dEstResNode[0];
-                    $dCodRes  = (string) $dCodResNode[0];
-                    $dMsgRes  = (string) $dMsgResNode[0];
-
-                    $data = [
-                        'status' => $dEstRes != 'Rechazado',
-                        'code'   => $dCodRes,
-                        'mensaje' => $dMsgRes,
-                        'fecha'  => $dFecProc,
-                    ];
-
-                    $sifen->update([
-                        'evento' => 'CANCELACION',
-                        'sifen_evento_codrespuesta' => $dCodRes,
-                        'sifen_evento_msjrespuesta' => $dMsgRes,
-                        'sifen_evento_estado' => $dEstRes,
-                    ]);
-
-                    return json_encode($data);
-
-                }
-
-                if ($tipoEvento == 3) {
-
-                    $xml = simplexml_load_string($response);
-                    $xml->registerXPathNamespace('env', 'http://www.w3.org/2003/05/soap-envelope');
-                    $xml->registerXPathNamespace('sifen', 'http://ekuatia.set.gov.py/sifen/xsd');
-
-                    $dFecProcNode = $xml->xpath('//sifen:dFecProc');
-                    $dEstResNode  = $xml->xpath('//sifen:dEstRes');
-                    $dCodResNode  = $xml->xpath('//sifen:dCodRes');
-                    $dMsgResNode  = $xml->xpath('//sifen:dMsgRes');
-                    if (!$dEstResNode || !$dFecProcNode || !$dMsgResNode) {
-                        throw new \Exception('Nodos esperados no encontrados en respuesta de SIFEN.');
-                    }
-
-                    $dFecProc = (string) $dFecProcNode[0];
-                    $dEstRes  = (string) $dEstResNode[0];
-                    $dCodRes  = (string) $dCodResNode[0];
-                    $dMsgRes  = (string) $dMsgResNode[0];
-
-                    $data = [
-                        'status' => $dEstRes != 'Rechazado',
-                        'code'   => $dCodRes,
-                        'mensaje' => $dMsgRes,
-                        'fecha'  => $dFecProc,
-                    ];
-
-                    $sifen->update([
-                        'evento' => 'INUTILIZACION',
-                        'sifen_evento_codrespuesta' => $dCodRes,
-                        'sifen_evento_msjrespuesta' => $dMsgRes,
-                        'sifen_evento_estado' => $dEstRes,
-                    ]);
-
-                    return json_encode($data);
-                }
-
-            }
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'Rechazado',
-                'code'    => 0,
-                'mensaje' => $e->getMessage(),
-                'fecha'   => ''
-            ]);
-        }
-
-    }
-
     public function envioEvento(Sifen $sifen, string $de, int $secuencia, int $tipoEvento)
     {
         try {
 
             $de  = str_replace('<?xml version="1.0" encoding="UTF-8" standalone="no"?>', '', $de);
-            $ruta_cert = storage_path('app/keys/firma.p12');
-            $password = 'LqO#9j0E';
+            $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
+            $password = $this->entidad->pass_firma;
             $xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
                         <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope"
                             xmlns:xsd="http://ekuatia.set.gov.py/sifen/xsd">
@@ -210,8 +47,12 @@ class SifenServices
                             </env:Body>
                         </env:Envelope>';
 
-            //$url = "https://sifen.set.gov.py/de/ws/eventos/evento.wsdl";
-            $url = 'https://sifen-test.set.gov.py/de/ws/eventos/evento.wsdl';
+            if ($this->entidad->ambiente == 0){
+                $url = 'https://sifen-test.set.gov.py/de/ws/eventos/evento.wsdl';
+            }else{
+                $url = "https://sifen.set.gov.py/de/ws/eventos/evento.wsdl";
+            }
+            
             //dd($xml);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -466,45 +307,6 @@ class SifenServices
         }
     }
 
-    public function cancelacion_gpt(Sifen $sifen, string $motivo)
-    {
-        try {
-            $cdc    = $sifen->cdc; // $datos['cdc'];
-            $aux_secuencia = Secuencia::find(1);
-            $codSecuencia1 = $aux_secuencia->secuencia  + 1;
-            $aux_secuencia->update(['secuencia' => $codSecuencia1]);
-            $motivoXml = htmlspecialchars($motivo, ENT_XML1, 'UTF-8');
-            $fechaFirma = now('America/Asuncion')->format('Y-m-d\TH:i:s');
-
-            $xmlString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-            <gGroupGesEve xmlns="http://ekuatia.set.gov.py/sifen/xsd"
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xsi:schemaLocation="http://ekuatia.set.gov.py/sifen/xsd siRecepEvento_v150.xsd">
-            <rGesEve>
-                <rEve Id="'.$codSecuencia1.'">
-                <dVerFor>150</dVerFor>
-                <dFecFirma>'.$fechaFirma.'</dFecFirma>
-                <gGroupTiEvt>
-                    <rGEveCan>
-                    <Id>'.$cdc.'</Id>
-                    <mOtEve>'.$motivoXml.'</mOtEve>
-                    </rGEveCan>
-                </gGroupTiEvt>
-                </rEve>
-            </rGesEve>
-            </gGroupGesEve>';
-                $xml = $xmlString;
-                $relativePath = 'eventos/event_' . $cdc . '_' . $codSecuencia1 . '.xml';
-                $absolutePath = $this->firmarXML($xml, $relativePath, $codSecuencia1, $cdc);
-                $xmlFirmado = file_get_contents($absolutePath);
-                return $xmlFirmado;
-
-        } catch (\Exception $e) {
-            Log::error('Fallo al generar XML Evento: ' . $e->getMessage());
-            throw new \Exception($e->getMessage());
-        }
-    }
-
     public function directorios(){
 
         if (!Storage::disk('public')->exists('eventos')) {
@@ -520,12 +322,12 @@ class SifenServices
         $xml = $xmlString;
         $doc = new DOMDocument();
         $doc->loadXML($xml, true);
-        $ruta_cert = storage_path('app/keys/firma.p12');
+        $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
         $pkcs12 = file_get_contents($ruta_cert);
         $priv_key = null;
         $certs    = array();
         //$password = $p12_pass;
-        $password = 'LqO#9j0E';
+        $password = $this->entidad->pass_firma;
         if (openssl_pkcs12_read($pkcs12, $certs, $password)) {
             $priv_key = $certs['pkey'];
             $cert     = $certs['cert'];
@@ -568,60 +370,6 @@ class SifenServices
 
         // Insertar el nodo de firma importado antes del cierre de la etiqueta </rGesEve>
         $rGesEveNode->insertBefore($importedSignatureNode, $rEvenode->nextSibling);
-        $xml_firmado = $doc->saveXML();
-        $relativePath = 'eventos/event_' . $cdc . '_' . $secuencia . '.xml';
-        Storage::disk('public')->put($relativePath, $xml_firmado);
-        $absolutePath = Storage::disk('public')->path($relativePath);
-
-        return $absolutePath;
-    }
-
-    public function firmarXML_gpt(string $xmlString, string $relativePath, int $secuencia, string $cdc)
-    {
-
-        $xml = $xmlString;
-        $doc = new DOMDocument();
-        $doc->loadXML($xml, true);
-        $ruta_cert = storage_path('app/keys/firma.p12');
-        $pkcs12 = file_get_contents($ruta_cert);
-        $priv_key = null;
-        $certs    = array();
-        //$password = $p12_pass;
-        $password = 'LqO#9j0E';
-        if (openssl_pkcs12_read($pkcs12, $certs, $password)) {
-            $priv_key = $certs['pkey'];
-            $cert     = $certs['cert'];
-        } else {
-            throw new \Exception("Error de contraseña: Verifica que la contraseña de tu clave privada sea correcta." . $ruta_cert);
-        }
-
-        $key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
-        $key->loadKey($priv_key);
-
-        $objDSig = new XMLSecurityDSig('', array('prefix' => 'ds'));
-        //$objDSig = new XMLSecurityDSig();
-        $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
-
-        $rEvenode = $doc->getElementsByTagName('rEve')->item(0);
-
-        $objDSig->addReference(
-            $rEvenode,
-            XMLSecurityDSig::SHA256,
-            [
-                'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
-                'http://www.w3.org/2001/10/xml-exc-c14n#',
-            ],
-            [
-                'id_name'   => 'Id',
-                'overwrite' => false,
-            ]
-        );
-
-        $objDSig->sign($key);
-        $objDSig->add509Cert($cert);
-
-        // ✅ LA FIRMA VA ADENTRO DE rEve
-        $objDSig->insertSignature($rEvenode);
         $xml_firmado = $doc->saveXML();
         $relativePath = 'eventos/event_' . $cdc . '_' . $secuencia . '.xml';
         Storage::disk('public')->put($relativePath, $xml_firmado);
@@ -719,8 +467,8 @@ class SifenServices
 
             $url = config('facturacion.link_api')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
 
-            $ruta_cert = storage_path('app/keys/firma.p12');
-            $password = 'LqO#9j0E';
+            $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
+            $password = $this->entidad->pass_firma;
             // dd($url);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -820,8 +568,8 @@ class SifenServices
             }
 
             curl_close($ch);
-            Storage::put("debug/envio_{$codSecuencia1}.xml", $xmlenvio);
-            Storage::put("debug/respuesta_{$codSecuencia1}.xml", $response);
+            // Storage::put("debug/envio_{$codSecuencia1}.xml", $xmlenvio);
+            // Storage::put("debug/respuesta_{$codSecuencia1}.xml", $response);
             return [$pasa, "Código: $codigo_res. Mensaje: " . html_entity_decode($mensaje_res)];
 
         } catch (\Exception $e) {
@@ -842,12 +590,9 @@ class SifenServices
 
             // 2) SOAP siRecepDE (un solo DE)
             //$codSecuencia1 = $sifen->secuencia + 1; // tu correlativo numérico (1–15 dígitos)}
-            $aux_secuencia = Secuencia::find(1);
-            $codSecuencia1 = $aux_secuencia->secuencia  + 1;
-            $aux_secuencia->update(['secuencia' => $codSecuencia1]);
+            $codSecuencia1 = $this->nextSecuenciaGlobal();
             $xmlFirmado = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xmlFirmado);
             $xmlFirmado = trim($xmlFirmado);
-            $entidad = Entidad::find(1);
 
             $xmlenvio = '
             <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
@@ -861,11 +606,11 @@ class SifenServices
             </soap:Envelope>';
 
             // 3) cURL
-            //$url       = config('facturacion.link_api_directo')[($this->entidad->ambiente == 1) ? 'produccion' : 'test']; // siRecepDE
-            $url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
-            $ruta_cert = storage_path('app/keys/firma.p12');
+            $url = config('facturacion.link_api_directo')[($this->entidad->ambiente == 1) ? 'produccion' : 'test']; // siRecepDE
+            //$url = 'https://sifen-test.set.gov.py/de/ws/sync/recibe.wsdl';
+            $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
             //$password = 'LqO#9j0E';
-            $password = $entidad->pass_firma;
+            $password = $this->entidad->pass_firma;
             //dd($xmlenvio, $codSecuencia1);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -883,8 +628,8 @@ class SifenServices
             curl_close($ch);
 
             // 4) Guardar debug
-            Storage::put("debug/envio_directo_{$codSecuencia1}.xml", $xmlenvio);
-            Storage::put("debug/respuesta_directo_{$codSecuencia1}.xml", $response);
+            // Storage::put("debug/envio_directo_{$codSecuencia1}.xml", $xmlenvio);
+            // Storage::put("debug/respuesta_directo_{$codSecuencia1}.xml", $response);
 
             // 5) Parseo robusto de la respuesta siRecepDE
             $xmlResponse = @simplexml_load_string($response);
@@ -954,15 +699,14 @@ class SifenServices
         }
     }
 
-
     public function consultar(Sifen $sifen)
     {
-        $lotenum = $sifen->sifen_num_transaccion;
+        $lotenum = $sifen->sifen_idprod;
         $codSecuencia = $sifen->secuencia;
         $num = $lotenum;
 
-        $ruta_cert = storage_path('app/keys/firma.p12');
-        $password = 'LqO#9j0E';
+        $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
+        $password = $this->entidad->pass_firma;
 
         $xml2 = '<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
         <env:Header/>
@@ -975,7 +719,7 @@ class SifenServices
         </env:Envelope>';
 
         $url = config('facturacion.link_consulta')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
-        // dd($xml2, $url);
+        //dd($xml2, $url);
         $ch = curl_init($url);
         // Establecer opciones de solicitud cURL
         curl_setopt($ch, CURLOPT_POST, true);
@@ -994,7 +738,7 @@ class SifenServices
             $doc = new DOMDocument();
             $doc->loadXML($response);
             $xpath = new DOMXPath($doc);
-
+            dd($response);
             // Registrar espacio de nombres
             $xmlRes = simplexml_load_string($response);
             $xmlRes->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
@@ -1020,13 +764,10 @@ class SifenServices
                 // Imprimir XML formateado en pantalla
                 echo '<pre>' . htmlspecialchars($newDoc->saveXML()) . '</pre>';
             }
-            //ACTUALIZA EL MENSAJE DEL LOTE CONTROL
-            //$updateLote = "UPDATE lote_control SET sifen_consulta_xml='$response', sifen_consulta_fecha='$fecha_proceso', sifen_consulta_codrespuesta='$mensaje_res' WHERE empresa='$_idEmpresa' and lote_num_sifen='$num'";
-            //$result     = pg_query($factPy, $updateLote);
-
+        
             $xpath->registerNamespace('ns2', 'http://ekuatia.set.gov.py/sifen/xsd');
             $gResProcLoteList = $xpath->query('//ns2:gResProcLote');
-
+            
             foreach ($gResProcLoteList as $gResProcLote) {
                 // Extraer el id y dMsgRes
                 $id = $xpath->evaluate('string(./ns2:id)', $gResProcLote); //cdc
@@ -1040,12 +781,12 @@ class SifenServices
                     $dProtAut = '0';
                 }
 
-                $sifen->update([
-                    // 'sifen_num_transaccion' => $dProtAut,
-                    'sifen_cod' => $dCodRes,
-                    'sifen_estado' => $dEstRes,
-                    'sifen_mensaje' => $dMsgRes
-                ]);
+                // $sifen->update([
+                //     // 'sifen_num_transaccion' => $dProtAut,
+                //     'sifen_cod' => $dCodRes,
+                //     'sifen_estado' => $dEstRes,
+                //     'sifen_mensaje' => $dMsgRes
+                // ]);
 
             }
         }
@@ -1066,8 +807,8 @@ class SifenServices
 
         try {
 
-            $ruta_cert = storage_path('app/keys/firma.p12');
-            $password = 'LqO#9j0E';
+            $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
+            $password = $this->entidad->pass_firma;
             $url = config('facturacion.link_consulta_cdc')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
 
             $cdc = $sifen->cdc;
@@ -1130,14 +871,17 @@ class SifenServices
 
         try {
 
-            $ruta_cert = storage_path('app/keys/firma.p12');
-            $password = 'LqO#9j0E';
-            // $url = config('facturacion.link_consulta_cdc')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
-            $url = 'https://sifen.set.gov.py/de/ws/consultas/consulta.wsdl';
+            $ruta_cert = storage_path('app/public/' . $this->entidad->firma);
+            $password = $this->entidad->pass_firma;
+            $url = config('facturacion.link_consulta_cdc')[($this->entidad->ambiente == 1) ? 'produccion' : 'test'];
+            // $url = 'https://sifen.set.gov.py/de/ws/consultas/consulta.wsdl';
 
             $cdc = $sifen;
 
-            // dd($this->entidad->ambiente, $url);
+            if (!file_exists($ruta_cert)) {
+                throw new \Exception("El archivo de certificado no existe: " . $ruta_cert);
+            }
+            //dd($this->entidad->ambiente, $url, $ruta_cert);
             //dd($url);
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -1151,7 +895,7 @@ class SifenServices
                     <env:Header/>
                     <env:Body>
                         <rEnviConsDeRequest xmlns="http://ekuatia.set.gov.py/sifen/xsd">
-                            <dId>1</dId>
+                            <dId>100</dId>
                             <dCDC>' . $cdc . '</dCDC>
                         </rEnviConsDeRequest>
                     </env:Body>
@@ -1170,22 +914,35 @@ class SifenServices
             $xmlResponse = simplexml_load_string($response);
             $xmlResponse->registerXPathNamespace('ns', 'http://ekuatia.set.gov.py/sifen/xsd');
 
-            $fecha   = (string) ($xmlResponse->xpath('//ns:dFecProc')[0] ?? '');
-            $estado  = (string) ($xmlResponse->xpath('//ns:dEstRes')[0] ?? '');
-            // $codigo  = (string) ($xmlResponse->xpath('//ns:gResProc/ns:dCodRes')[0] ?? '');
-            // $mensaje = (string) ($xmlResponse->xpath('//ns:gResProc/ns:dMsgRes')[0] ?? '');
-            $codigo = (string) $xmlResponse->xpath('//ns:dMsgRes')[0];
-            $mensaje     = (string) $xmlResponse->xpath('//ns:dCodRes')[0];
-            $xContenDE   = (string) $xmlResponse->xpath('//ns:xContenDE')[0];
+            $codigo   = (string) ($xmlResponse->xpath('//ns:dCodRes')[0] ?? '');
+            $estado   = (string) ($xmlResponse->xpath('//ns:dEstRes')[0] ?? '');
+            $mensaje  = (string) ($xmlResponse->xpath('//ns:dMsgRes')[0] ?? '');
+            $fecha    = (string) ($xmlResponse->xpath('//ns:dFecProc')[0] ?? '');
+            $xContenDE = (string) ($xmlResponse->xpath('//ns:xContenDE')[0] ?? '');
+
+            $dProtAut = 0;
+            if (preg_match('/<dProtAut>(.*?)<\/dProtAut>/', html_entity_decode($xContenDE), $m)) {
+                $dProtAut = $m[1];
+            }
+
+            $estadoDE = '';
+            if (preg_match('/<dEstRes>(.*?)<\/dEstRes>/', $xContenDE, $m)) {
+                $estadoDE = $m[1];
+            }
+
+            $aprobado = !empty($dProtAut);
 
             return [
-                'fecha'   => $fecha,
-                'estado'  => $estado,
-                'codigo'  => $codigo,
-                'mensaje' => html_entity_decode($mensaje),
-                'contenido' => $xContenDE,
-                // 'raw'     => $response,
+                'aprobado'     => $aprobado,
+                'id'           => $cdc,
+                'codigo'       => $codigo,
+                'estado_sifen' => $estado,
+                'mensaje'      => html_entity_decode($mensaje),
+                'idprod'       => $dProtAut,
+                'fecha'        => $fecha,
+                'estadoDE' => $estadoDE
             ];
+
         } catch (\Exception $e) {
             Log::error('Fallo al generar XML: ' . $e->getMessage());
             throw new \Exception($e->getMessage());
@@ -1203,4 +960,5 @@ class SifenServices
             return (int) $seq->secuencia;
         });
     }
+
 }

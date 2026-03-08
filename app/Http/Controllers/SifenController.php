@@ -132,13 +132,26 @@ class SifenController extends Controller
         return redirect()->route('consulta.factura_pendiente')->with('message', 'Reenviado con exito.');
     }
 
-
-    public function consultar_cdc($cdc)
+    public function consultar_cdc(Sifen $sifen)
     {
-        return $this->sifen->consultar_cdc_sin_modelo($cdc);
-        return $cdc;
-    }
+        $estado = $this->sifen->consultar_cdc_sin_modelo($sifen->cdc);
 
+        $map = [
+            'Aprobado' => 'APROBADO',
+            'Aprobado con observación' => 'APROBADO',
+            'Rechazado' => 'RECHAZADO',
+            'Anulado' => 'ANULADO'
+        ];
+
+        $sifen->update([
+            'sifen_estado' => $map[$estado['estadoDE']] ?? 'PENDIENTE',
+            'sifen_idprod' => $estado['idprod'],
+            'sifen_envio_codrespuesta'    => $estado['codigo'],
+            'sifen_mensaje'=> $estado['mensaje'],
+        ]);
+        
+        return redirect()->route('consulta.factura')->with('message', 'Factura con Cdc:' . $sifen->cdc .' estado: ' . $estado['estadoDE']);
+    }
 
     public function consulta(Request $request)
     {
@@ -158,7 +171,6 @@ class SifenController extends Controller
 
         return view('consulta.fac', compact('fecha_desde', 'fecha_hasta', 'data'));
     }
-
 
     public function consultar_estado_lote(Sifen $sifen)
     {
@@ -217,6 +229,33 @@ class SifenController extends Controller
             return response()->json(['error' => 'Falta el campo condicionPago'], 422);
         }
 
+        $establecimiento = Establecimiento::find($sifen_json['establecimiento_id']);
+
+        if (!$establecimiento) {
+            return response()->json([
+                'error' => 'No existe establecimiento con este id.'
+            ], 422);
+        }
+
+        $establecimiento = Establecimiento::find($sifen_json['establecimiento_id']);
+
+        if (!$establecimiento) {
+            return response()->json([
+                'error' => 'No existe establecimiento con este id.'
+            ], 422);
+        }
+        if ($establecimiento->sucursal != $sifen_json['factura_sucursal']) {
+            return response()->json([
+                'error' => 'La sucursal de la factura no coincide con la sucursal del establecimiento.'
+            ], 422);
+        }
+
+        if ($establecimiento->general != $sifen_json['factura_general']) {
+            return response()->json([
+                'error' => 'El número general de la factura no coincide con el establecimiento.'
+            ], 422);
+        }
+
         $existe_factura = Factura::where('factura_sucursal', $sifen_json['factura_sucursal'])
         ->where('factura_general', $sifen_json['factura_general'])
         ->where('factura_numero', $sifen_json['factura_numero'])
@@ -268,9 +307,6 @@ class SifenController extends Controller
                 $timbrado = Timbrado::find(1);
                 $entidad = Entidad::find(1);
                 $establecimiento = Establecimiento::find($data['establecimiento_id']);
-                if (!$establecimiento) {
-                    throw new \Exception('No existe establecimiento con este Id: ' . $data['establecimiento_id']);
-                }
 
                 // Validar que haya items
                 if (empty($data['items']) || !is_array($data['items'])) {

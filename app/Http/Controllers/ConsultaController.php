@@ -10,4 +10,5 @@ class ConsultaController extends Controller
     {
         return view('consulta.factura');
     }
+
 }
